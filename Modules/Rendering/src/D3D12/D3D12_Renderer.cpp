@@ -41,10 +41,6 @@ void Engine::Graphics::D3D12_Renderer::use_depth_func(DepthFunc func) {
 	
 }
 
-void Engine::Graphics::D3D12_Renderer::use_scissor_test(bool use) {
-	
-}
-
 void Engine::Graphics::D3D12_Renderer::set_scissor_rect(uint32_t x, uint32_t y, uint32_t width, uint32_t height) {
 	
 }

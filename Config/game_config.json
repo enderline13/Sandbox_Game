@@ -2,7 +2,7 @@
   "screen": {
     "width": 1920,
     "height": 1080,
-    "vsync": true,
+    "present_mode_code": 1,
     "fullscreen": false
   },
   "volume": {

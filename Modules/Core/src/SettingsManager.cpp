@@ -20,8 +20,7 @@ void SettingsManager::load_settings() {
 	config = j.get<Config>();
 
 	DeviceContext::display.toggle_fullscreen(config.screen.fullscreen);
-	//DeviceContext::display.toggle_VSYNC(config.screen.vsync);
-
+	DeviceContext::display.present_mode = static_cast<DisplayController::DisplayPresentMode>(config.screen.present_mode_code);
 	DeviceContext::display.change_resolution(config.screen.width, config.screen.height);
 
 	set_master_volume((float)config.volume.master / 100.0f);
@@ -38,9 +37,9 @@ void SettingsManager::toggle_fullscreen() {
 	DeviceContext::display.toggle_fullscreen(config.screen.fullscreen);
 }
 
-void SettingsManager::toggle_vsync() {
-	config.screen.vsync = !config.screen.vsync;
-	//DeviceContext::display.toggle_VSYNC(config.screen.vsync);
+void SettingsManager::change_present_mode() {
+	DeviceContext::display.change_present_mode();
+	config.screen.present_mode_code = DeviceContext::display.get_present_mode_code();
 }
 
 void SettingsManager::set_master_volume(float volume) {

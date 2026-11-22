@@ -98,7 +98,7 @@ void SettingsPage::setup_page() {
 
 	button_resolution->get_component<Engine::UI::Button>()->on_button_click.set_callback_method<SettingsPage, &SettingsPage::change_resolution>(this);
 	button_fullscreen->get_component<Engine::UI::Button>()->on_button_click.set_callback_method<SettingsPage, &SettingsPage::toggle_fullscreen>(this);
-	button_vsync->get_component<Engine::UI::Button>()->on_button_click.set_callback_method<SettingsPage, &SettingsPage::toggle_vsync>(this);
+	button_vsync->get_component<Engine::UI::Button>()->on_button_click.set_callback_method<SettingsPage, &SettingsPage::change_present_mode>(this);
 	button_exit->get_component<Engine::UI::Button>()->on_button_click.set_callback_method<MenuUIController, &MenuUIController::close_settings_page>(&MenuUIController::Instance());
 
 	canvas->add_object(settings_logo);
@@ -123,10 +123,13 @@ void SettingsPage::setup_page() {
 	else
 		fullscreen_text->set_text("Fullscreen: OFF");
 
-	if (SettingsManager::Instance().is_vsync_on())
-		vsync_text->set_text("Vsync: ON");
+	uint8_t present_mode_code = SettingsManager::Instance().get_present_mode_code();
+	if (present_mode_code == 0)
+		vsync_text->set_text("V-Sync: OFF");
+	else if (present_mode_code == 1)
+		vsync_text->set_text("V-Sync: Double");
 	else
-		vsync_text->set_text("Vsync: OFF");
+		vsync_text->set_text("V-Sync: Triple");
 
 	volume_slider_master->set_value(SettingsManager::Instance().get_master_volume());
 	volume_slider_music->set_value(SettingsManager::Instance().get_music_volume());
@@ -151,13 +154,16 @@ void SettingsPage::toggle_fullscreen() {
 		fullscreen_text->set_text("Fullscreen: OFF");
 }
 
-void SettingsPage::toggle_vsync() {
+void SettingsPage::change_present_mode() {
 	button_click_sound.play();
-	SettingsManager::Instance().toggle_vsync();
-	if (SettingsManager::Instance().is_vsync_on())
-		vsync_text->set_text("Vsync: ON");
+	SettingsManager::Instance().change_present_mode();
+	uint8_t present_mode_code = SettingsManager::Instance().get_present_mode_code();
+	if (present_mode_code == 0)
+		vsync_text->set_text("V-Sync: OFF");
+	else if (present_mode_code == 1)
+		vsync_text->set_text("V-Sync: Double");
 	else
-		vsync_text->set_text("Vsync: OFF");
+		vsync_text->set_text("V-Sync: Triple");
 }
 
 void SettingsPage::set_master_volume(float volume) {

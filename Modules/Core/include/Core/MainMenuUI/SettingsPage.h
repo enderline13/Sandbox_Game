@@ -20,7 +20,7 @@ private:
 	~SettingsPage() = default;
 	void change_resolution();
 	void toggle_fullscreen();
-	void toggle_vsync();
+	void change_present_mode();
 	void set_master_volume(float volume);
 	void set_music_volume(float volume);
 	void set_sfx_volume(float volume);

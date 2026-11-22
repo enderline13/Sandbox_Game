@@ -16,7 +16,7 @@ void Engine::Graphics::GL_TextureArray::setup_texture_array(
 ) {
     this->width = width;
     this->height = height;
-    this->depth = depth;
+    this->depth = (depth == 0) ? 1 : depth;
     this->filter = filter;
     this->wrap = wrap;
     this->resize_strategy = resize_str;

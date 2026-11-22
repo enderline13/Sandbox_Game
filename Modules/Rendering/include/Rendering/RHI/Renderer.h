@@ -3,6 +3,7 @@
 #include <Rendering/RHI/IndexBuffer.h>
 #include <Rendering/RHI/Pipeline.h>
 #include <memory>
+#include <unordered_set>
 
 namespace Engine::Graphics {
 	class Renderer {
@@ -10,7 +11,7 @@ namespace Engine::Graphics {
 		// global single instance ptr to Renderer interface
 		inline static Renderer* instance = nullptr;
 
-		enum class DepthFunc : uint8_t { Less, LessOrEqual, Greater, GreaterOrEqual };
+		enum class DepthFunc : uint8_t { Never, Less, Equal, LessOrEqual, Greater, NotEqual, GreaterOrEqual, Always };
 		enum class PresentMode : uint8_t {
 			Immediate,	// no Vsync, no limits
 			Double,		// classic Vsync, double buffer
@@ -28,7 +29,6 @@ namespace Engine::Graphics {
 		virtual void use_depth_test(bool use) = 0;
 		virtual void use_depth_write(bool use) = 0;
 		virtual void use_depth_func(DepthFunc func) = 0;
-		virtual void use_scissor_test(bool use) = 0;
 		virtual void set_scissor_rect(uint32_t x, uint32_t y, uint32_t width, uint32_t height) = 0;
 		virtual void bind_pipeline(const Pipeline& p) = 0;
 
@@ -59,7 +59,18 @@ namespace Engine::Graphics {
 			uint32_t instanceCount,
 			uint32_t baseInstance = 0
 		) = 0;
+
+		void mark_dirty_tex_array(uint32_t tex_width) {
+			dirty_texture_arrays.emplace(tex_width);
+		}
+		const std::unordered_set<uint32_t>& get_dirty_tex_arrays() const {
+			return dirty_texture_arrays;
+		}
+		void clear_dirty_tex_arrays() {
+			dirty_texture_arrays.clear();
+		}
 	protected:
 		const Pipeline* current_pipeline = nullptr;
+		std::unordered_set<uint32_t> dirty_texture_arrays;
 	};
 }

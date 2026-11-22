@@ -42,12 +42,12 @@ namespace Engine::Core {
 		uint32_t world_width = 0, world_height = 0;
 		std::unordered_map<uint32_t, std::unique_ptr<Engine::Object::ObjectComponent>>* obj_comps_ptr;
 
-		std::unique_ptr<Engine::Graphics::Pipeline> pipeline;
-		std::unique_ptr<Engine::Graphics::ShaderHandle> shader;
-		std::unique_ptr<Engine::Graphics::StorageBuffer> sb;
-		std::unique_ptr<Engine::Graphics::VertexLayout> instance_vl;
-		std::unique_ptr<Engine::Graphics::VertexBuffer> instance_vb;
-		std::unique_ptr<Engine::Graphics::IndexBuffer> instance_ib;
+		std::unique_ptr<Engine::Graphics::Pipeline> pipeline{};
+		std::unique_ptr<Engine::Graphics::ShaderHandle> shader{};
+		std::unique_ptr<Engine::Graphics::StorageBuffer> sb{};
+		std::unique_ptr<Engine::Graphics::VertexLayout> instance_vl{};
+		std::unique_ptr<Engine::Graphics::VertexBuffer> instance_vb{};
+		std::unique_ptr<Engine::Graphics::IndexBuffer> instance_ib{};
 
 		std::vector<EntityRenderData> entity_render_buf;
 		std::vector<std::unique_ptr<Engine::Entity::EntityBase>> entities;

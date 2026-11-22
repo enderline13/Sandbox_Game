@@ -51,7 +51,7 @@ void WorldManager::render(Engine::Graphics::Renderer* renderer) {
 
 void WorldManager::clear() {
 	for (auto& [name, world] : worlds) {
-		world.reset();
+		if (world) world.reset();
 	}
 }
 

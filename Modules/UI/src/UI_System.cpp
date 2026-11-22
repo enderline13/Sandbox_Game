@@ -21,15 +21,26 @@ bool Engine::UI::UI_System::init() {
 	std::filesystem::path vertex_shader_path;
 	std::filesystem::path fragment_shader_path;
 
-	vertex_shader_path = "Resources/shaders/UI/ui_sprites.vert";
-	fragment_shader_path = "Resources/shaders/UI/ui_sprites.frag";
+	std::filesystem::path base_path;
+	std::string spirv;
+	if (DeviceContext::graphics_API == DeviceContext::GraphicsAPI::OPEN_GL) {
+		base_path = "Resources/shaders/GLSL";
+		spirv = "";
+	}
+	else if (DeviceContext::graphics_API == DeviceContext::GraphicsAPI::VULKAN) {
+		base_path = "Resources/shaders/SPIRV";
+		spirv = ".spv";
+	}
+
+	vertex_shader_path = base_path / (std::string("UI/ui_sprites.vert") + spirv);
+	fragment_shader_path = base_path / (std::string("UI/ui_sprites.frag") + spirv);
 	sprites_shader = EG::Renderer::instance->create_ShaderHandle(vertex_shader_path, fragment_shader_path, ec);
 	if (ec) {
 		Engine::Util::Logger::Log("Failed to create Shader Handle for UI sprites: " + ec.message());
 		return false;
 	}
 
-	fragment_shader_path = "Resources/shaders/UI/ui_tiled_sprites.frag";
+	fragment_shader_path = base_path / (std::string("UI/ui_tiled_sprites.frag") + spirv);
 	tiled_sprites_shader = EG::Renderer::instance->create_ShaderHandle(vertex_shader_path, fragment_shader_path, ec);
 	if (ec) {
 		Engine::Util::Logger::Log("Failed to create Shader Handle for UI tiled sprites: " + ec.message());
@@ -59,8 +70,8 @@ bool Engine::UI::UI_System::init() {
 	sprites_vb->set_data(nullptr, MAX_SPRITES_VERTEX_SIZE * sizeof(UI_Vertex2f), EG::VertexBuffer::USAGE_DYNAMIC);
 
 	// SDF text shader handle & buffers
-	vertex_shader_path = "Resources/shaders/UI/sdf_text.vert";
-	fragment_shader_path = "Resources/shaders/UI/sdf_text.frag";
+	vertex_shader_path = base_path / (std::string("UI/sdf_text.vert") + spirv);
+	fragment_shader_path = base_path / (std::string("UI/sdf_text.frag") + spirv);
 	sdf_text_shader = EG::Renderer::instance->create_ShaderHandle(vertex_shader_path, fragment_shader_path, ec);
 	if (ec) {
 		Engine::Util::Logger::Log("Failed to create Shader Handle for UI SDF text: " + ec.message());
@@ -86,7 +97,7 @@ bool Engine::UI::UI_System::init() {
 		*sprites_shader, *sprites_vl,
 		EG::Pipeline::PipelinePrimitives::Triangle, EG::Pipeline::PipelineScissor::Dynamic,
 		EG::Pipeline::PipelineViewport::Dynamic, EG::Pipeline::PipelineBlendMode::Alpha,
-		EG::Pipeline::PipelineDepthMode::ReadAndWrite, EG::Pipeline::PipelineCullMode::Back, ec
+		EG::Pipeline::PipelineDepthMode::None, EG::Pipeline::PipelineCullMode::None, ec
 	);
 
 	if (!ec) tiled_sprites_pipeline = EG::Renderer::instance->create_Pipeline(ec);
@@ -94,7 +105,7 @@ bool Engine::UI::UI_System::init() {
 		*tiled_sprites_shader, *sprites_vl,
 		EG::Pipeline::PipelinePrimitives::Triangle, EG::Pipeline::PipelineScissor::Dynamic,
 		EG::Pipeline::PipelineViewport::Dynamic, EG::Pipeline::PipelineBlendMode::Alpha,
-		EG::Pipeline::PipelineDepthMode::ReadAndWrite, EG::Pipeline::PipelineCullMode::Back, ec
+		EG::Pipeline::PipelineDepthMode::None, EG::Pipeline::PipelineCullMode::None, ec
 	);
 
 	if (!ec) sdf_text_pipeline = EG::Renderer::instance->create_Pipeline(ec);
@@ -102,7 +113,7 @@ bool Engine::UI::UI_System::init() {
 		*sdf_text_shader, *sdf_text_vl,
 		EG::Pipeline::PipelinePrimitives::Triangle, EG::Pipeline::PipelineScissor::Dynamic,
 		EG::Pipeline::PipelineViewport::Dynamic, EG::Pipeline::PipelineBlendMode::Alpha,
-		EG::Pipeline::PipelineDepthMode::ReadAndWrite, EG::Pipeline::PipelineCullMode::Back, ec
+		EG::Pipeline::PipelineDepthMode::None, EG::Pipeline::PipelineCullMode::None, ec
 	);
 
 	if (ec) {
@@ -189,7 +200,6 @@ void Engine::UI::UI_System::render(Engine::Graphics::Renderer* renderer) {
 	sprites_INDEX_OFFSET = 0;
 	sdf_text_INDEX_OFFSET = 0;
 
-	renderer->use_scissor_test(true);
 	renderer->set_scissor_rect(0, 0, DeviceContext::display.width, DeviceContext::display.height);
 
 	ubo_data.content_offset = glm::vec2(0.0f);
@@ -227,5 +237,10 @@ void Engine::UI::UI_System::render(Engine::Graphics::Renderer* renderer) {
 			sdf_text_INDEX_OFFSET += render_entry.index_count;
 		}
 	}
-	renderer->use_scissor_test(false);
+}
+
+void Engine::UI::UI_System::rebind_pipeline_samplers() {
+	Engine::Resource::TextureArrayManager::Instance().bind_samplers_to_pipeline(*sprites_pipeline);
+	Engine::Resource::TextureArrayManager::Instance().bind_samplers_to_pipeline(*tiled_sprites_pipeline);
+	Engine::Resource::TextureArrayManager::Instance().bind_samplers_to_pipeline(*sdf_text_pipeline);
 }

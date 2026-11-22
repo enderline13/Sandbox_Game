@@ -14,6 +14,6 @@ namespace Engine::Graphics {
 
 		void use_shader() const;
 	private:
-		uint32_t id;
+		uint32_t id = 0;
 	};
 }

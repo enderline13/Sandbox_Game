@@ -21,6 +21,7 @@ private:
 	void loading_update();
 	void gameplay_update();
 private:
+	void rebind_dirty_tex_arrays();
 	void(GameEngine::* update_proc)() = nullptr;
 
 	inline static Game_State game_update_state = LoadingResources;

@@ -10,6 +10,7 @@ namespace Engine::Errors {
         // Shader file
         ShaderFileLoadError,
         ShaderSpirvReflectError,
+        OpenGLShaderCreateError,
 
         // Vulkan errors
         VulkanDeviceNotFound,

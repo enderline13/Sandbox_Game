@@ -19,12 +19,12 @@ layout(std140, binding = 2) uniform UB {
 
 layout (binding = 0) uniform sampler2DArray u_textures[9];
 
-out vec4 v_FragColor;
+layout (location = 0) out vec4 v_FragColor;
 
-in vec2 v_GlobalPos;
-in vec2 v_TexUV;
-flat in uint v_TexArrayID;
-flat in float v_TexID;
+layout (location = 0) in vec2 v_GlobalPos;
+layout (location = 1) in vec2 v_TexUV;
+layout (location = 2) flat in uint v_TexArrayID;
+layout (location = 3) flat in uint v_TexID;
 
 vec3 getLightColor(vec2 worldPosition) {
     ivec2 blockCoord = ivec2(worldPosition.xy);
@@ -81,7 +81,7 @@ ShaderLightingInfo getBilinearCustomLightInfo(vec2 worldPosition) {
 }
 
 void main() {
-    vec4 texColor = texture(u_textures[v_TexArrayID], vec3(v_TexUV, v_TexID));
+    vec4 texColor = texture(u_textures[v_TexArrayID], vec3(v_TexUV, float(v_TexID)));
     vec3 color = texColor.rgb;
     float alpha = texColor.a;
 

@@ -29,8 +29,8 @@ void World::init_render_buffers() {
 	const uint32_t MAX_INDEX_AMOUNT = MAX_SQUARES * 6;
 
 	std::error_code ec;
-	std::filesystem::path vertex_shader_path = "Resources/shaders/World/world_sprites.vert";
-	std::filesystem::path fragment_shader_path = "Resources/shaders/World/world_sprites.frag";
+	std::filesystem::path vertex_shader_path = "Resources/shaders/GLSL/World/world_sprites.vert";
+	std::filesystem::path fragment_shader_path = "Resources/shaders/GLSL/World/world_sprites.frag";
 	shader = EG::Renderer::instance->create_ShaderHandle(vertex_shader_path, fragment_shader_path, ec);
 	if (ec) {
 		Engine::Util::Logger::Log("Failed to create World shader handle: " + ec.message());
@@ -69,7 +69,7 @@ void World::init_render_buffers() {
 		*shader, *vl,
 		EG::Pipeline::PipelinePrimitives::Triangle, EG::Pipeline::PipelineScissor::Dynamic,
 		EG::Pipeline::PipelineViewport::Dynamic, EG::Pipeline::PipelineBlendMode::Alpha,
-		EG::Pipeline::PipelineDepthMode::ReadAndWrite, EG::Pipeline::PipelineCullMode::Back, ec
+		EG::Pipeline::PipelineDepthMode::None, EG::Pipeline::PipelineCullMode::Back, ec
 	);
 
 	Engine::Resource::TextureArrayManager::Instance().bind_samplers_to_pipeline(*pipeline);

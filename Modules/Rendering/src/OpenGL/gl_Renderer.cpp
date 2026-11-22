@@ -17,6 +17,8 @@ Engine::Graphics::OpenGL_Renderer::OpenGL_Renderer(std::error_code& ec) {
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	// read texture bytes without alignment or padding (correctly load textures of different formats and sizes)
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+	glEnable(GL_SCISSOR_TEST);
 }
 
 void Engine::Graphics::OpenGL_Renderer::start_frame(std::error_code& ec) {
@@ -41,22 +43,30 @@ void Engine::Graphics::OpenGL_Renderer::set_viewport(uint32_t x, uint32_t y, uin
 }
 
 void Engine::Graphics::OpenGL_Renderer::use_depth_test(bool use) {
+	// for RHI should be in Pipeline, but it's not used in 2D
 	if (use) glEnable(GL_DEPTH_TEST);
 	else glDisable(GL_DEPTH_TEST);
 }
 
 void Engine::Graphics::OpenGL_Renderer::use_depth_write(bool use) {
-	glDepthMask(use);
+	// for RHI should be in Pipeline, but it's not used in 2D
+	glDepthMask(use ? GL_TRUE : GL_FALSE);
 }
 
 void Engine::Graphics::OpenGL_Renderer::use_depth_func(DepthFunc func) {
-	GLenum fun{};
-	glDepthFunc(fun);
-}
-
-void Engine::Graphics::OpenGL_Renderer::use_scissor_test(bool use) {
-	if (use) glEnable(GL_SCISSOR_TEST);
-	else glDisable(GL_SCISSOR_TEST);
+	// for RHI should be in Pipeline, but it's not used in 2D
+	GLenum gl_func{};
+	switch (func) {
+		case DepthFunc::Never:          gl_func = GL_NEVER;    break;
+		case DepthFunc::Less:           gl_func = GL_LESS;     break;
+		case DepthFunc::Equal:          gl_func = GL_EQUAL;    break;
+		case DepthFunc::LessOrEqual:    gl_func = GL_LEQUAL;   break;
+		case DepthFunc::Greater:        gl_func = GL_GREATER;  break;
+		case DepthFunc::NotEqual:       gl_func = GL_NOTEQUAL; break;
+		case DepthFunc::GreaterOrEqual: gl_func = GL_GEQUAL;   break;
+		case DepthFunc::Always:         gl_func = GL_ALWAYS;   break;
+	}
+	glDepthFunc(gl_func);
 }
 
 void Engine::Graphics::OpenGL_Renderer::set_scissor_rect(uint32_t x, uint32_t y, uint32_t width, uint32_t height) {

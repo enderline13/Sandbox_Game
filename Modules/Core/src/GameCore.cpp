@@ -36,12 +36,18 @@ bool GameEngine::update() {
 
 void GameEngine::render() {
 	std::error_code ec;
+
+	rebind_dirty_tex_arrays();
+
 	Engine::Graphics::Renderer::instance->start_frame(ec);
 	if (ec) {
 		// process error and don't render new frame (should probably exit application if fatal error occurs)
 		return;
 	}
-	Engine::Graphics::Renderer::instance->clear(0.0, 0.0, 0.0);
+	Engine::Graphics::Renderer::instance->set_viewport(0, 0, DeviceContext::display.width, DeviceContext::display.height);
+	Engine::Graphics::Renderer::instance->set_scissor_rect(0, 0, DeviceContext::display.width, DeviceContext::display.height);
+
+	Engine::Graphics::Renderer::instance->clear(0.0, 1.0, 0.0);
 
 	if (game_render_state == Game_State::inGame) {
 		WorldManager::Instance().render(Engine::Graphics::Renderer::instance);
@@ -62,6 +68,12 @@ bool GameEngine::init() {
 	if (ok) ok = init_GraphicsAPI();
 	if (ok) ok = init_input();
 	if (ok) ok = init_main_resources();
+	if (!ok) {
+		std::print("FATAL ERRORS OCCURED:\n");
+		for (const auto& err : Engine::Util::Logger::Get_Logs()) {
+			std::print("Error: {}\n", err);
+		}
+	}
 	return ok;
 }
 
@@ -81,7 +93,7 @@ void GameEngine::uninit() {
 	Engine::Resource::TextureArrayManager::Instance().uninit();
 	Engine::Audio::AudioSystem::Instance().uninit();
 	Engine::UI::UI_System::Instance().uninit();
-	Engine::Core::EntitySystem::Instance().uninit();
+	//Engine::Core::EntitySystem::Instance().uninit();
 
 	WorldManager::Instance().clear();
 
@@ -108,7 +120,8 @@ bool GameEngine::init_input() {
 }
 
 bool GameEngine::init_main_resources() {
-	Engine::Resource::TextureArrayManager::Instance().init();
+	bool ok = true;
+	ok = Engine::Resource::TextureArrayManager::Instance().init();
 
 	Engine::Audio::AudioSystem::Instance().init();
 	Engine::Audio::AudioSystem::Instance().add_sound_group("Core:UI");
@@ -117,26 +130,27 @@ bool GameEngine::init_main_resources() {
 
 	SettingsManager::Instance().load_settings();
 
-	Engine::UI::UI_System::Instance().init();
+	if (ok) ok = Engine::UI::UI_System::Instance().init();
 
-	Engine::Core::EntitySystem::Instance().init();
+	//Engine::Core::EntitySystem::Instance().init();
 
-	if (ResourceLoader::Instance().load_minimal_core_resources() == false) {
+	if (ok) ok = ResourceLoader::Instance().load_minimal_core_resources();
+
+	if (ok) {
+		MenuUIController::Instance().init();
+		GameUIController::Instance().init();
+
+		DeviceContext::toggle_main_window(true);
+
+		update_proc = &GameEngine::loading_update;
+		ResourceLoader::Instance().start_resources_loading();
+		MenuUIController::Instance().start_loading_resources();
+	}
+	else {
 		DeviceContext::exit_application();
-		std::println("{}", Engine::Util::Logger::Get_Last_Log());
-		return false;
 	}
 
-	MenuUIController::Instance().init();
-	GameUIController::Instance().init();
-
-	DeviceContext::toggle_main_window(true);
-
-	update_proc = &GameEngine::loading_update;
-	ResourceLoader::Instance().start_resources_loading();
-	MenuUIController::Instance().start_loading_resources();
-
-	return true;
+	return ok;
 }
 
 void GameEngine::loading_update() {
@@ -182,4 +196,12 @@ void GameEngine::gameplay_update() {
 		break;
 	}
 	}
+}
+
+void GameEngine::rebind_dirty_tex_arrays() {
+	const auto& dirty_tex_arrays = Engine::Graphics::Renderer::instance->get_dirty_tex_arrays();
+	if (dirty_tex_arrays.empty()) return;
+
+	// Test with UI for now
+	Engine::UI::UI_System::Instance().rebind_pipeline_samplers();
 }

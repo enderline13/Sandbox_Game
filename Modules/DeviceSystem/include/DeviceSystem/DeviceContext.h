@@ -33,14 +33,13 @@ private:
     static bool create_vulkan_instance();
 
     static void glfwFrameBufferSizeCallback(GLFWwindow* window, int width, int height);
-    static void glfwWindowSizeCallback(GLFWwindow* window, int width, int height);
     static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
     static void char_callback(GLFWwindow* window, unsigned int codepoint);
     static void cursor_position_callback(GLFWwindow* window, double mX, double mY);
     static void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
     static void mouse_wheel_callback(GLFWwindow* window, double xOffset, double yOffset);
 public:
-    inline static GraphicsAPI graphics_API = GraphicsAPI::OPEN_GL;
+    inline static GraphicsAPI graphics_API = GraphicsAPI::VULKAN;
     inline static DisplayController display{};
     inline static Keyboard keyBoard{};
     inline static Mouse mouse{};

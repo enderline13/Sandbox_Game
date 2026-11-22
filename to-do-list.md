@@ -15,18 +15,12 @@
 ** new lighting system (with chunks and uint_vec3?)
 
 # -----Vulkan Implementation-----
-** change present mode in settings manager
-** process error code in OpenGL shader constructor
-** think about viewport in pipeline init
+* for now only one main queue "graphics_queue" is used for graphics, swapchain and presentation.
+	Second queue "present_queue" can be used for presentation later
 ** both OpenGL and Vulkan RHI implementations should work
-** compile shaders to SPIR-V for Vulkan
-** bind textures (simple/array) in pipelines
-** change shaders code for bindings
-** implement all methods in vulkan renderer
-** remake managers and systems that use rendering (add pipeline, add error_code in init, rework creation process)
 ** update dirty texture arrays for Vulkan implementation
-** process init result from different systems/managers that use RHI
 
+* check shaders code for bindings
 * maybe check error_code for texture objects later
 
 # descriptor bindings (should be unique in shader (0, 1, 2, ..., but no 0 two times, etc.)):

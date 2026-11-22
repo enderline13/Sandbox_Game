@@ -51,22 +51,23 @@ void Engine::Graphics::VK_Pipeline::init(
     input_assembly.topology = topology;
     input_assembly.primitiveRestartEnable = VK_FALSE;
 
-    // 4. Viewport and Scissor Static/Dynamic
+    // 4. Viewport and Scissor (can be Static, but here thay are always Dynamic)
     std::vector<VkDynamicState> dynamic_states;
-    if (v == PipelineViewport::Dynamic) dynamic_states.push_back(VK_DYNAMIC_STATE_VIEWPORT);
-    else if (s == PipelineScissor::Dynamic) dynamic_states.push_back(VK_DYNAMIC_STATE_SCISSOR);
+    dynamic_states.push_back(VK_DYNAMIC_STATE_VIEWPORT);
+    dynamic_states.push_back(VK_DYNAMIC_STATE_SCISSOR);
 
     VkPipelineDynamicStateCreateInfo dynamic_state{};
     dynamic_state.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
     dynamic_state.dynamicStateCount = static_cast<uint32_t>(dynamic_states.size());
     dynamic_state.pDynamicStates = dynamic_states.data();
 
+    // viewport and scissor pointers are nullptr, because they are dynamic anyway
     VkPipelineViewportStateCreateInfo viewport_state{};
     viewport_state.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
     viewport_state.viewportCount = 1;
+    viewport_state.pViewports = VK_NULL_HANDLE;
     viewport_state.scissorCount = 1;
-    // Если они статические, сюда нужно передать указатели на конкретные VkViewport / VkRect2D, 
-    // но для UI мы используем Dynamic, поэтому структуры могут оставаться пустыми (но валидными).
+    viewport_state.pScissors = VK_NULL_HANDLE;
 
     // 5. Rasterization and CullMode
     VkPipelineRasterizationStateCreateInfo rasterizer{};
@@ -249,7 +250,7 @@ void Engine::Graphics::VK_Pipeline::bind_storage_buffer(StorageBuffer& sb, uint3
 }
 
 void Engine::Graphics::VK_Pipeline::bind_sampler_2D(Texture& tex, uint32_t binding, uint32_t set) const {
-    
+    // not used
 }
 
 void Engine::Graphics::VK_Pipeline::bind_sampler_2D_array(TextureArray& tex_arr, uint32_t binding, uint32_t index, uint32_t set) const {

@@ -6,7 +6,6 @@ int main() {
 	GameEngine game;
 	try {
 		if (game.init() == false) {
-			std::print("FATAL ERROR!: {}\n", Engine::Util::Logger::Get_Last_Log());
 			return EXIT_FAILURE;
 		}
 	}

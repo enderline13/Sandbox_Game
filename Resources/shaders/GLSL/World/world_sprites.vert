@@ -11,10 +11,10 @@ layout(std140, binding = 2) uniform UB {
 	float u_DayRatio;
 };
 
-out vec2 v_GlobalPos;
-out vec2 v_TexUV;
-flat out uint v_TexArrayID;
-flat out float v_TexID;
+layout (location = 0) out vec2 v_GlobalPos;
+layout (location = 1) out vec2 v_TexUV;
+layout (location = 2) flat out uint v_TexArrayID;
+layout (location = 3) flat out uint v_TexID;
 
 void main() {
 	gl_Position = u_ProjectionMatrix * u_ViewMatrix * vec4(a_Pos, 0.0, 1.0);
@@ -22,5 +22,5 @@ void main() {
 	v_GlobalPos = a_Pos;
 	v_TexUV = a_TexUV;
 	v_TexArrayID = a_TexArrayID;
-	v_TexID = float(a_TexID);
+	v_TexID = a_TexID;
 }

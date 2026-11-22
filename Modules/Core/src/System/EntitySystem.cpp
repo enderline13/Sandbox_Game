@@ -16,8 +16,8 @@ void Engine::Core::EntitySystem::init() {
 	entity_render_buf.resize(MAX_ENTITIES_RENDER);
 
 	std::error_code ec;
-	std::filesystem::path vertex_shader_path = "Resources/shaders/entity_sprites.vert";
-	std::filesystem::path fragment_shader_path = "Resources/shaders/world_sprites.frag";
+	std::filesystem::path vertex_shader_path = "Resources/shaders/GLSL/entity_sprites.vert";
+	std::filesystem::path fragment_shader_path = "Resources/shaders/GLSL/world_sprites.frag";
 	shader = Engine::Graphics::Renderer::instance->create_ShaderHandle(vertex_shader_path, fragment_shader_path, ec);
 	if (ec) {
 		Engine::Util::Logger::Log("Failed to create Entity shader: " + ec.message());
@@ -50,7 +50,7 @@ void Engine::Core::EntitySystem::init() {
 		*shader, *instance_vl,
 		Engine::Graphics::Pipeline::PipelinePrimitives::Triangle, Engine::Graphics::Pipeline::PipelineScissor::Dynamic,
 		Engine::Graphics::Pipeline::PipelineViewport::Dynamic, Engine::Graphics::Pipeline::PipelineBlendMode::Alpha,
-		Engine::Graphics::Pipeline::PipelineDepthMode::ReadAndWrite, Engine::Graphics::Pipeline::PipelineCullMode::Back, ec
+		Engine::Graphics::Pipeline::PipelineDepthMode::None, Engine::Graphics::Pipeline::PipelineCullMode::Back, ec
 	);
 
 	// UB

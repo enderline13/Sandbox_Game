@@ -150,7 +150,7 @@ void ResourceLoader::Hot_Reload() {
 
 bool ResourceLoader::load_base_fonts() {
 	if (Engine::Resource::FontManager::Instance().load_font("Resources/fonts/verdana_SDF", "Core") == false) {
-		Engine::Util::Logger::Log("Fatal Error: Couldn't load base font");
+		Engine::Util::Logger::Log("Couldn't load base font");
 		return false;
 	}
 	std::print("{}", "[" + DeviceContext::get_current_system_time() + "] ResourceLoader: Base font loaded\n");
@@ -165,12 +165,12 @@ bool ResourceLoader::load_base_textures() {
 		std::string file = tex_name + ".png";
 		std::filesystem::path tex_path = "Resources/base_data/textures/" + file;
 		if (!std::filesystem::exists(tex_path)) {
-			Engine::Util::Logger::Log("Fatal Error: Couldn't load base UI textures");
+			Engine::Util::Logger::Log("Couldn't load base UI textures");
 			return false;
 		}
 		std::string UID = "Core:" + tex_name;
 		if (Engine::Resource::TextureArrayManager::Instance().load_texture(tex_path, UID) == false) {
-			Engine::Util::Logger::Log("Fatal Error: Couldn't load Texture <" + UID + ">!");
+			Engine::Util::Logger::Log("Couldn't load Texture <" + UID + ">!");
 			return false;
 		}
 	}
@@ -181,11 +181,11 @@ bool ResourceLoader::load_base_sprites() {
 	std::filesystem::path path = "Resources/base_data/sprites_data";
 	std::filesystem::path file = path / "base_sprites.json";
 	if (!std::filesystem::exists(file)) {
-		Engine::Util::Logger::Log("Fatal Error: Couldn't find base sprites meta");
+		Engine::Util::Logger::Log("Couldn't find base sprites meta");
 		return false;
 	}
 	if (Load_resources(ResourceType::R_SPRITE, "Resources/base_data/sprites_data", false) == false) {
-		Engine::Util::Logger::Log("Fatal Error: Couldn't load base sprites");
+		Engine::Util::Logger::Log("Couldn't load base sprites");
 		return false;
 	}
 	std::print("{}", "[" + DeviceContext::get_current_system_time() + "] ResourceLoader: Base sprites loaded\n");
@@ -194,11 +194,11 @@ bool ResourceLoader::load_base_sprites() {
 bool ResourceLoader::load_base_audio() {
 	std::filesystem::path resource_path = "Resources/base_data/audio_data";
 	if (!std::filesystem::exists(resource_path / "base_audio.json")) {
-		Engine::Util::Logger::Log("Fatal Error: Couldn't find base audio meta");
+		Engine::Util::Logger::Log("Couldn't find base audio meta");
 		return false;
 	}
 	if (Load_resources(ResourceType::R_AUDIO, "Resources/base_data/audio_data", false) == false) {
-		Engine::Util::Logger::Log("Fatal Error: Couldn't load base audio");
+		Engine::Util::Logger::Log("Couldn't load base audio");
 		return false;
 	}
 	std::print("{}", "[" + DeviceContext::get_current_system_time() + "] ResourceLoader: Base audio loaded\n");

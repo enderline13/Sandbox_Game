@@ -16,6 +16,7 @@ namespace Engine::UI {
 		void uninit();
 		void update();
 		void render(Engine::Graphics::Renderer* renderer);
+		void rebind_pipeline_samplers();
 	private:
 		UI_System() = default;
 		~UI_System() = default;

@@ -16,7 +16,6 @@ namespace Engine::Graphics {
 		void use_depth_test(bool use) override;
 		void use_depth_write(bool use) override;
 		void use_depth_func(DepthFunc func) override;
-		void use_scissor_test(bool use) override;
 		void set_scissor_rect(uint32_t x, uint32_t y, uint32_t width, uint32_t height) override;
 		void bind_pipeline(const Pipeline& p) override;
 

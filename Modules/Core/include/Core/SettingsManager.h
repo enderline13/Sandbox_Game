@@ -9,9 +9,10 @@ class SettingsManager {
 	struct Config {
 		struct Screen {
 			uint32_t width, height;
-			bool fullscreen, vsync;
+			uint8_t present_mode_code;
+			bool fullscreen;
 
-			NLOHMANN_DEFINE_TYPE_INTRUSIVE(Screen, width, height, fullscreen, vsync)
+			NLOHMANN_DEFINE_TYPE_INTRUSIVE(Screen, width, height, present_mode_code, fullscreen)
 		};
 		struct Volume {
 			uint32_t master, music, sfx;
@@ -32,7 +33,7 @@ public:
 	void load_settings();
 	void change_resolution();
 	void toggle_fullscreen();
-	void toggle_vsync();
+	void change_present_mode();
 	void set_master_volume(float volume);
 	void set_music_volume(float volume);
 	void set_sfx_volume(float volume);
@@ -40,7 +41,7 @@ public:
 	float get_music_volume();
 	float get_sfx_volume();
 	bool is_fullscreen() const { return config.screen.fullscreen; }
-	bool is_vsync_on() const { return config.screen.vsync; }
+	uint8_t get_present_mode_code() const { return config.screen.present_mode_code; }
 	uint32_t get_res_index() const { return current_resolution_index; }
 private:
 	Engine::Audio::AudioGroupMixer mixer_ui;

@@ -1,4 +1,5 @@
 #include "Rendering/Vulkan/VK_TextureArray.h"
+#include "Rendering/RHI/Renderer.h"
 #include <Base/EngineError.h>
 #include <stb_image.h>
 
@@ -32,7 +33,7 @@ void Engine::Graphics::VK_TextureArray::setup_texture_array(
     this->wrap = wrap;
     this->resize_strategy = resize_str;
     this->channels = channels;
-    uint32_t new_depth = depth;
+    uint32_t new_depth = (depth == 0) ? 1 : depth;
 
     VkImage new_image = VK_NULL_HANDLE;
     VmaAllocation new_allocation = VK_NULL_HANDLE;
@@ -252,6 +253,7 @@ void Engine::Graphics::VK_TextureArray::create_tex_array(
 
     if (vkCreateImageView(device, &img_view_info, nullptr, &new_image_view) != VK_SUCCESS) {
         ec = Engine::Errors::EngineError::VulkanTexImageViewCreateError;
+        vmaDestroyImage(allocator, new_image, new_allocation);
         return;
     }
 }
@@ -429,5 +431,5 @@ void Engine::Graphics::VK_TextureArray::change_image_layer_layouts(
 }
 
 void Engine::Graphics::VK_TextureArray::mark_as_dirty() {
-    // call renderer
+    Engine::Graphics::Renderer::instance->mark_dirty_tex_array(width);
 }

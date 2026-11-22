@@ -32,7 +32,6 @@ namespace Engine::Graphics {
 		void use_depth_test(bool use) override;
 		void use_depth_write(bool use) override;
 		void use_depth_func(DepthFunc func) override;
-		void use_scissor_test(bool use) override;
 		void set_scissor_rect(uint32_t x, uint32_t y, uint32_t width, uint32_t height) override;
 		void bind_pipeline(const Pipeline& p) override;
 
@@ -108,8 +107,8 @@ namespace Engine::Graphics {
 		std::vector<VkFence> in_flight_fences;
 
 		// current image and frame index
-		uint32_t current_image_index;
-		uint32_t current_frame_index;
+		uint32_t current_image_index = 0;
+		uint32_t current_frame_index = 0;
 
 		// current present mode
 		PresentMode current_present_mode;

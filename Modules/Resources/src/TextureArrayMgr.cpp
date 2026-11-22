@@ -38,15 +38,16 @@ bool Engine::Resource::TextureArrayManager::init() {
 	namespace EG = Engine::Graphics;
 	std::error_code ec;
 
+	// minimum is 1!
 	const uint32_t array_size[8] = {
 		10/*32*/,
 		10/*64*/,
 		10/*128*/,
 		10/*256*/,
 		10/*512*/,
-		0/*1024*/,
-		0/*2048*/,
-		0/*4096*/,
+		1/*1024*/,
+		1/*2048*/,
+		1/*4096*/,
 	};
 	const EG::TextureArray::ResizeStrategy array_resize_str[8] = {
 		EG::TextureArray::ResizeStrategy::Resize_by_50_percent,

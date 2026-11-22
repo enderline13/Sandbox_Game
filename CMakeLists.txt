@@ -36,16 +36,14 @@ find_package(VulkanMemoryAllocator REQUIRED)
 find_package(SPIRV-Headers REQUIRED)
 find_package(spirv-reflect-static REQUIRED)
 
-add_executable(${PROJECT_NAME} "${PROJECT_SOURCE_DIR}/src/main.cpp")
-
 target_link_libraries(DeviceSystem
     PUBLIC
-        Base
-        glfw
         glm::glm
     PRIVATE
-        Utility
+        glfw
         glad::glad
+        Base
+        Utility
         Rendering
 )
 
@@ -53,15 +51,14 @@ target_link_libraries(Utility
     PUBLIC
         glm::glm
         nlohmann_json::nlohmann_json
-        Base
     PRIVATE
+        Base
         stb::stb
 )
 
 target_link_libraries(Rendering
     PUBLIC
         glm::glm
-        stb::stb
         Vulkan::Loader
         vulkan-headers::vulkan-headers
         GPUOpen::VulkanMemoryAllocator
@@ -69,7 +66,9 @@ target_link_libraries(Rendering
 	    SPIRV-Headers::SPIRV-Headers
         spirv-reflect-static
         glad::glad
+        stb::stb
         Utility
+        Base
 )
 
 target_link_libraries(Resources
@@ -81,42 +80,77 @@ target_link_libraries(Resources
         Rendering
 )
 
-target_link_libraries(Audio PUBLIC miniaudio::miniaudio)
-target_link_libraries(Audio PRIVATE Utility)
+target_link_libraries(Audio
+    PUBLIC
+        miniaudio::miniaudio
+    PRIVATE
+        Utility
+)
 
-target_link_libraries(Physics PUBLIC glm::glm)
-target_link_libraries(Physics PUBLIC Base)
+target_link_libraries(Physics
+    PUBLIC
+        glm::glm
+    PRIVATE
+        Base 
+)
 
-target_link_libraries(UI PUBLIC Rendering)
-target_link_libraries(UI PUBLIC Resources)
-target_link_libraries(UI PUBLIC DeviceSystem)
-target_link_libraries(UI PUBLIC Audio)
+target_link_libraries(UI
+    PUBLIC
+        Rendering
+        Resources
+    PRIVATE
+        DeviceSystem
+)
 
-target_link_libraries(Objects PUBLIC UI)
-target_link_libraries(Objects PUBLIC Physics)
+target_link_libraries(Objects
+    PUBLIC
+        Physics
+        Resources
+)
 
-target_link_libraries(Entities PUBLIC Objects)
+target_link_libraries(Entities
+    PUBLIC
+        Objects
+    PRIVATE
+        DeviceSystem
+)
 
-target_link_libraries(Core PUBLIC Entities)
-
-target_link_libraries(${PROJECT_NAME} PRIVATE Core)
+target_link_libraries(Core
+    PUBLIC
+        UI
+        Objects
+        Entities
+        Audio
+    PRIVATE
+        DeviceSystem
+)
 
 target_link_libraries(EngineAPI PUBLIC Entities)
-
 
 target_compile_definitions(Utility PUBLIC
     $<$<CONFIG:Debug>:CMAKE_DEBUG_MACRO=1>
     $<$<CONFIG:Release>:CMAKE_DEBUG_MACRO=1>
 )
-if(MSVC)
-    target_compile_options(Rendering PRIVATE
-        /W4                 # (Max Warning Level 4)
-        /permissive-        # turn off incompatible Microsoft extensions (strict C++ standard)
-        /Zc:__cplusplus     # correct macros __cplusplus (C++23)
-        /Zc:preprocessor    # modern preprocessing
-    )
-endif()
 
+
+add_executable(${PROJECT_NAME} "${PROJECT_SOURCE_DIR}/src/main.cpp")
+target_link_libraries(${PROJECT_NAME} PRIVATE Core)
+
+# Shader Compiler
+add_subdirectory(Tools/ShaderCompiler)
+
+add_custom_target(CompileShaders ALL
+    COMMAND $<TARGET_FILE:ShaderCompiler>
+            "${PROJECT_SOURCE_DIR}/Resources/shaders/GLSL"
+            "${PROJECT_SOURCE_DIR}/Resources/shaders/SPIRV"
+            "$<IF:$<CONFIG:Debug>,debug,release>"
+    DEPENDS ShaderCompiler
+    COMMENT "Compiling GLSL shaders to SPIR-V..."
+)
+
+add_dependencies(${PROJECT_NAME} ShaderCompiler)
+
+# Copy data folders
 add_custom_command(
     TARGET ${PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E remove_directory "$<TARGET_FILE_DIR:${PROJECT_NAME}>/Resources"
@@ -141,17 +175,3 @@ add_custom_command(
         "$<TARGET_FILE_DIR:${PROJECT_NAME}>/Mods"
     COMMENT "Copy Config folder to build folder."
 )
-
-add_executable(DataCompiler
-    "${PROJECT_SOURCE_DIR}/Tools/DataCompiler/DataCompilerMain.cpp"
-)
-target_link_libraries(DataCompiler PRIVATE Utility)
-
-#add_custom_command(
-#    TARGET ${PROJECT_NAME}
-#    PRE_BUILD
-#    COMMAND DataCompiler
-#        ${PROJECT_SOURCE_DIR}/Resources/game_data
-#        ${PROJECT_SOURCE_DIR}/Resources/bin_data
-#    COMMENT "Compiling core JSON to binary DATA..."
-#)

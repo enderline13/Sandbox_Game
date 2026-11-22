@@ -99,7 +99,3 @@ void DisplayController::change_resolution(uint32_t width, uint32_t height) {
         }
     }
 }
-
-DisplayController::DisplayVideoMode& DisplayController::get_current_video_mode() {
-    return video_modes[current_video_mode];
-}

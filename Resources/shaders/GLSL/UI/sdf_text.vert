@@ -9,8 +9,8 @@ layout(std140, binding = 1) uniform UI_UB {
 	vec2 u_ContentOffset;
 };
 
-out vec2 v_TexUV;
-out vec4 v_TextColor;
+layout (location = 0) out vec2 v_TexUV;
+layout (location = 1) out vec4 v_TextColor;
 
 void main() {
 	gl_Position = u_ProjectionMatrix * u_ViewMatrix * vec4(a_Pos.x + u_ContentOffset.x, a_Pos.y + u_ContentOffset.y, 0.0, 1.0);

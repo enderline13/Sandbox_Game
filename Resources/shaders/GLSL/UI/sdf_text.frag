@@ -1,9 +1,9 @@
 #version 460 core
 
-out vec4 v_FragColor;
+layout (location = 0) out vec4 v_FragColor;
 
-in vec2 v_TexUV;
-in vec4 v_TextColor;
+layout (location = 0) in vec2 v_TexUV;
+layout (location = 1) in vec4 v_TextColor;
 
 layout (binding = 0) uniform sampler2DArray u_textures[9];
 

@@ -117,7 +117,7 @@ bool Engine::Graphics::Vulkan_Renderer::is_device_suitable(VkPhysicalDevice dev)
 	vkGetPhysicalDeviceQueueFamilyProperties(dev, &queue_family_count, queue_families.data());
 
 	int graphics_family_index = -1;
-	for (int i = 0; i < queue_families.size(); i++) {
+	for (int i = 0; i < queue_families.size(); ++i) {
 		// Find queue with graphics that supports current VkSurfaceKHR
 		VkBool32 present_support = false;
 		vkGetPhysicalDeviceSurfaceSupportKHR(dev, i, surface, &present_support);
@@ -177,6 +177,7 @@ void Engine::Graphics::Vulkan_Renderer::create_logical_device(std::error_code& e
 	}
 
 	vkGetDeviceQueue(device, graphics_queue_family_index, 0, &graphics_queue);
+	present_queue = graphics_queue;
 }
 
 void Engine::Graphics::Vulkan_Renderer::init_VMA(std::error_code& ec) {
@@ -643,32 +644,53 @@ void Engine::Graphics::Vulkan_Renderer::on_window_resize(uint32_t window_width, 
 }
 
 void Engine::Graphics::Vulkan_Renderer::set_viewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height) {
-	
+	VkViewport viewport{};
+	viewport.x = static_cast<float>(x);
+	viewport.y = static_cast<float>(height - y);
+	viewport.width = static_cast<float>(width);
+	viewport.height = -static_cast<float>(height);
+	viewport.minDepth = 0.0f;
+	viewport.maxDepth = 1.0f;
+	vkCmdSetViewport(command_buffers[current_frame_index], 0, 1, &viewport);
 }
 
 void Engine::Graphics::Vulkan_Renderer::use_depth_test(bool use) {
-	
+	// not used
 }
 
 void Engine::Graphics::Vulkan_Renderer::use_depth_write(bool use) {
-	
+	// not used
 }
 
 void Engine::Graphics::Vulkan_Renderer::use_depth_func(DepthFunc func) {
-	
-}
-
-void Engine::Graphics::Vulkan_Renderer::use_scissor_test(bool use) {
-	
+	// not used
 }
 
 void Engine::Graphics::Vulkan_Renderer::set_scissor_rect(uint32_t x, uint32_t y, uint32_t width, uint32_t height) {
-	
+	VkRect2D scissor{};
+	scissor.offset.x = x;
+	scissor.offset.y = y;
+	scissor.extent.width = width;
+	scissor.extent.height = height;
+	vkCmdSetScissor(command_buffers[current_frame_index], 0, 1, &scissor);
 }
 
 void Engine::Graphics::Vulkan_Renderer::bind_pipeline(const Pipeline& p) {
 	const auto& vk_pipeline = static_cast<const VK_Pipeline&>(p);
 	vkCmdBindPipeline(command_buffers[current_frame_index], VK_PIPELINE_BIND_POINT_GRAPHICS, vk_pipeline.get_handle());
+
+	const auto& sets = vk_pipeline.get_descriptor_sets();
+	vkCmdBindDescriptorSets(
+		command_buffers[current_frame_index],
+		VK_PIPELINE_BIND_POINT_GRAPHICS,
+		vk_pipeline.get_layout_handle(),
+		0,									// firstSet
+		static_cast<uint32_t>(sets.size()), // descriptorSetCount
+		sets.data(),						// descriptors array
+		0,									// dynamicOffsetCount
+		nullptr
+	);
+
 	current_pipeline = &p; // remember this pipeline as current pipeline
 }
 

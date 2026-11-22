@@ -25,7 +25,8 @@ public:
     void change_present_mode();
     void change_resolution(bool next);
     void change_resolution(uint32_t width, uint32_t height);
-    DisplayVideoMode& get_current_video_mode();
+    DisplayVideoMode& get_current_video_mode() { return video_modes[current_video_mode]; }
+    uint8_t get_present_mode_code() const { return static_cast<uint8_t>(present_mode); }
 public:
     uint32_t width = 0, height = 0;
     float ratio = 0;
