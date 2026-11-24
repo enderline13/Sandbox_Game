@@ -1,23 +1,43 @@
 #include "Core/SettingsManager.h"
 #include <DeviceSystem/DeviceContext.h>
 #include <Audio/AudioSystem.h>
+#include <Utility/Logger.h>
 #include <fstream>
+
+bool SettingsManager::load_config() {
+	std::filesystem::path settings_file_path = "Config/game_config.json";
+	if (!std::filesystem::exists(settings_file_path)) {
+		Engine::Util::Logger::Log("Couldn't find config file!");
+		return false;
+	}
+
+	std::ifstream config_read(settings_file_path);
+	if (!config_read.is_open()) {
+		Engine::Util::Logger::Log("Couldn't load config file!");
+		return false;
+	}
+	nlohmann::json j;
+	config_read >> j;
+
+	config = j.get<Config>();
+
+	if (config.renderer == "Vulkan") {
+		DeviceContext::graphics_API = DeviceContext::GraphicsAPI::VULKAN;
+	}
+	else if (config.renderer == "DirectX12") {
+		DeviceContext::graphics_API = DeviceContext::GraphicsAPI::DIRECTX;
+	}
+	else {
+		DeviceContext::graphics_API = DeviceContext::GraphicsAPI::OPEN_GL;
+	}
+
+	return true;
+}
 
 void SettingsManager::load_settings() {
 	mixer_ui.setup_mixer("Core:UI");
 	mixer_music.setup_mixer("Core:Music");
 	mixer_sfx.setup_mixer("Core:SFX");
-
-	std::filesystem::path settings_file_path = "Config/game_config.json";
-	if (!std::filesystem::exists(settings_file_path)) {
-		throw std::runtime_error("Fatal Error, Couldn't load settings file!");
-	}
-	
-	std::ifstream config_read(settings_file_path);
-	nlohmann::json j;
-	config_read >> j;
-
-	config = j.get<Config>();
 
 	DeviceContext::display.toggle_fullscreen(config.screen.fullscreen);
 	DeviceContext::display.present_mode = static_cast<DisplayController::DisplayPresentMode>(config.screen.present_mode_code);

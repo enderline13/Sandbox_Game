@@ -21,6 +21,7 @@ namespace Engine::Graphics {
 		Renderer() { instance = this; }
 		virtual ~Renderer() { instance = nullptr; }
 
+		virtual void wait_for_frame_slot(std::error_code& ec) = 0;
 		virtual void start_frame(std::error_code& ec) = 0;
 		virtual void clear(float r, float g, float b) = 0;
 		virtual void present_frame(std::error_code& ec) = 0;
@@ -30,7 +31,10 @@ namespace Engine::Graphics {
 		virtual void use_depth_write(bool use) = 0;
 		virtual void use_depth_func(DepthFunc func) = 0;
 		virtual void set_scissor_rect(uint32_t x, uint32_t y, uint32_t width, uint32_t height) = 0;
+
 		virtual void bind_pipeline(const Pipeline& p) = 0;
+		//binds only one push constant for Vulkan (uniform for OpenGL)
+		virtual void bind_pipeline_push_constant(const Pipeline& p, const void* data) = 0;
 
 		virtual std::unique_ptr<ShaderHandle> create_ShaderHandle(
 			const std::filesystem::path& vertex_shader_path,
@@ -49,6 +53,7 @@ namespace Engine::Graphics {
 		virtual void renderIndexedData(
 			const VertexBuffer& vb,
 			const IndexBuffer& ib,
+			uint32_t vb_offset,
 			uint32_t indexCount,
 			uint32_t baseIndex = 0
 		) = 0;
@@ -69,8 +74,14 @@ namespace Engine::Graphics {
 		void clear_dirty_tex_arrays() {
 			dirty_texture_arrays.clear();
 		}
+		// used to update dynamic buffers between 2 frames
+		uint32_t get_current_frame_index() const { return current_frame_index; }
 	protected:
 		const Pipeline* current_pipeline = nullptr;
 		std::unordered_set<uint32_t> dirty_texture_arrays;
+
+		PresentMode current_present_mode;
+		uint32_t current_frame_index = 0; // 0 or 1 for double bufferization
+		uint32_t current_image_index = 0; // 0, 1 or 2 (depends on SwapChain images size)
 	};
 }

@@ -9,5 +9,6 @@
     "master": 90,
     "music": 75,
     "sfx": 60
-  }
+  },
+  "renderer": "Vulkan"
 }

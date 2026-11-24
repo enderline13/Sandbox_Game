@@ -9,6 +9,10 @@ Engine::Graphics::D3D12_Renderer::~D3D12_Renderer() {
 
 }
 
+void Engine::Graphics::D3D12_Renderer::wait_for_frame_slot(std::error_code& ec) {
+
+}
+
 void Engine::Graphics::D3D12_Renderer::start_frame(std::error_code& ec) {
 	
 }
@@ -49,6 +53,9 @@ void Engine::Graphics::D3D12_Renderer::bind_pipeline(const Pipeline& p) {
 	
 }
 
+void Engine::Graphics::D3D12_Renderer::bind_pipeline_push_constant(const Pipeline& p, const void* data) {
+
+}
 
 std::unique_ptr<Engine::Graphics::ShaderHandle> Engine::Graphics::D3D12_Renderer::create_ShaderHandle(
 	const std::filesystem::path& vertex_shader_path,
@@ -94,6 +101,7 @@ std::unique_ptr<Engine::Graphics::Pipeline> Engine::Graphics::D3D12_Renderer::cr
 void Engine::Graphics::D3D12_Renderer::renderIndexedData(
 	const VertexBuffer& vb,
 	const IndexBuffer& ib,
+	uint32_t vb_offset,
 	uint32_t indexCount,
 	uint32_t baseIndex
 ) {

@@ -47,6 +47,11 @@ void MainMenuPage::setup_page() {
 	auto version = Engine::UI::UI_Creator::create_SDF_text(
 		glm::vec2(1.0f, 0.1f), glm::vec2(-DeviceContext::display.ratio + 0.525f, -0.95f), "Version 1.0.0", glm::vec4(1.0f, 1.0f, 0.0f, 1.0f), 0.075f
 	);
+	auto renderer_api = Engine::UI::UI_Creator::create_SDF_text(
+		glm::vec2(1.0f, 0.1f), glm::vec2(-DeviceContext::display.ratio + 0.525f, -0.85f),
+		(DeviceContext::graphics_API == DeviceContext::GraphicsAPI::OPEN_GL) ? "OpenGL 4.6" : "Vulkan 1.2",
+		glm::vec4(1.0f, 1.0f, 0.0f, 1.0f), 0.075f
+	);
 
 	button_play->get_component<Engine::UI::Button>()->on_button_click.set_callback_method<MenuUIController, &MenuUIController::open_saves_page>(&MenuUIController::Instance());
 	button_settings->get_component<Engine::UI::Button>()->on_button_click.set_callback_method<MenuUIController, &MenuUIController::open_settings_page>(&MenuUIController::Instance());
@@ -60,4 +65,5 @@ void MainMenuPage::setup_page() {
 	//canvas->add_object(logo_frame);
 	canvas->add_object(menu_logo);
 	canvas->add_object(version);
+	canvas->add_object(renderer_api);
 }

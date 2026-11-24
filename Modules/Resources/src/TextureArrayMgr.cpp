@@ -60,11 +60,12 @@ bool Engine::Resource::TextureArrayManager::init() {
 		EG::TextureArray::ResizeStrategy::Resize_by_1,
 	};
 	uint32_t tex_res = 32;
+	// Use SRGB data format for color textures
 	for (uint32_t i = 0; i < 8; ++i) {
 		texture_arrays[i] = EG::Renderer::instance->create_TextureArray(ec);
 		texture_arrays[i]->setup_texture_array(
 			tex_res, tex_res, array_size[i],
-			EG::TextureArray::FilterMode::Nearest, EG::TextureArray::WrapMode::ClampToEdge,
+			EG::TextureArray::FilterMode::Nearest, EG::TextureArray::WrapMode::ClampToEdge, EG::TextureArray::DataFormat::UNORM,
 			4, array_resize_str[i], ec
 		);
 		if (ec) {
@@ -74,11 +75,11 @@ bool Engine::Resource::TextureArrayManager::init() {
 		tex_res *= 2;
 	}
 
-	// last is for SDF
+	// last is for SDF (Use UNORM data format)
 	texture_arrays[8] = EG::Renderer::instance->create_TextureArray(ec);
 	texture_arrays[8]->setup_texture_array(
 		1024, 1024, 1,
-		EG::TextureArray::FilterMode::Linear, EG::TextureArray::WrapMode::ClampToEdge,
+		EG::TextureArray::FilterMode::Linear, EG::TextureArray::WrapMode::ClampToEdge, EG::TextureArray::DataFormat::UNORM,
 		1, EG::TextureArray::ResizeStrategy::Resize_by_1, ec
 	);
 	if (ec) {

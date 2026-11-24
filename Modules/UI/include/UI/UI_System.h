@@ -5,8 +5,10 @@
 
 namespace Engine::UI {
 	class UI_System {
-		static constexpr uint16_t MAX_SPRITES_PER_DRAW = 2000;
-		static constexpr uint16_t MAX_SDF_TEXT_PER_DRAW = 2000;
+		static constexpr uint16_t MAX_SPRITES_PER_DRAW = 5000;
+		static constexpr uint16_t MAX_SDF_TEXT_PER_DRAW = 5000;
+		static constexpr uint16_t MAX_SPRITES_VERTEX_SIZE = MAX_SPRITES_PER_DRAW * 4;
+		static constexpr uint16_t MAX_SDF_TEXT_VERTEX_SIZE = MAX_SDF_TEXT_PER_DRAW * 4;
 	public:
 		static UI_System& Instance() {
 			static UI_System ui;

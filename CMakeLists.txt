@@ -136,15 +136,19 @@ target_compile_definitions(Utility PUBLIC
 add_executable(${PROJECT_NAME} "${PROJECT_SOURCE_DIR}/src/main.cpp")
 target_link_libraries(${PROJECT_NAME} PRIVATE Core)
 
-# Shader Compiler
+# Shader Compiler for Vulkan
 add_subdirectory(Tools/ShaderCompiler)
 
-add_custom_target(CompileShaders ALL
+add_custom_target(CompileShaders ALL #include this target to default build
     COMMAND $<TARGET_FILE:ShaderCompiler>
-            "${PROJECT_SOURCE_DIR}/Resources/shaders/GLSL"
-            "${PROJECT_SOURCE_DIR}/Resources/shaders/SPIRV"
+            "${PROJECT_SOURCE_DIR}/Resources/shaders/GLSL/Common"
+            "${PROJECT_SOURCE_DIR}/Resources/shaders/SPIRV/Common"
             "$<IF:$<CONFIG:Debug>,debug,release>"
-    DEPENDS ShaderCompiler
+    COMMAND $<TARGET_FILE:ShaderCompiler>
+            "${PROJECT_SOURCE_DIR}/Resources/shaders/GLSL/VK_Specific"
+            "${PROJECT_SOURCE_DIR}/Resources/shaders/SPIRV/VK_Specific"
+            "$<IF:$<CONFIG:Debug>,debug,release>"
+    DEPENDS ShaderCompiler #ShaderCompiler compile first
     COMMENT "Compiling GLSL shaders to SPIR-V..."
 )
 
@@ -173,5 +177,5 @@ add_custom_command(
     COMMAND ${CMAKE_COMMAND} -E copy_directory
         "${CMAKE_CURRENT_SOURCE_DIR}/Mods"
         "$<TARGET_FILE_DIR:${PROJECT_NAME}>/Mods"
-    COMMENT "Copy Config folder to build folder."
+    COMMENT "Copy Mods folder to build folder."
 )

@@ -221,7 +221,7 @@ void Engine::Graphics::VK_Shader::create_pipeline_layout(
         vk_push_constant_ranges.push_back(pc_range);
     }
 
-    // ====== 3. Create Pipeline Layuot ======
+    // ====== 3. Create Pipeline Layout ======
     VkPipelineLayoutCreateInfo pipeline_layout_info{};
     pipeline_layout_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     pipeline_layout_info.setLayoutCount = static_cast<uint32_t>(descriptor_set_layouts.size());

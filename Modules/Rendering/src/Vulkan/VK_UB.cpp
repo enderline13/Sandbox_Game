@@ -51,9 +51,9 @@ void Engine::Graphics::VK_UB::set_data(const void* data, size_t size, UniformBuf
 }
 
 void Engine::Graphics::VK_UB::update_data(const void* data, size_t size, size_t offset) const {
-    if (buffer == VK_NULL_HANDLE || mapped_data == nullptr) return;
+    if (buffer == VK_NULL_HANDLE) return;
 
-    if (buffer_usage == UniformBufUsage::USAGE_DYNAMIC) {
+    if (buffer_usage == UniformBufUsage::USAGE_DYNAMIC && mapped_data) {
         if (offset + size <= buffer_size) {
             std::memcpy(static_cast<char*>(mapped_data) + offset, data, size);
         }

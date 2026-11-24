@@ -29,6 +29,9 @@ bool GameEngine::update() {
 
 	if (DeviceContext::should_exit()) return 0;
 
+	std::error_code ec;
+	Engine::Graphics::Renderer::instance->wait_for_frame_slot(ec); //wait before current frame is rendered, then update dynamic buffers
+
 	(this->*update_proc)();
 
 	return 1;
@@ -39,6 +42,8 @@ void GameEngine::render() {
 
 	rebind_dirty_tex_arrays();
 
+	if (DeviceContext::display.width == 0 || DeviceContext::display.height == 0) return;
+
 	Engine::Graphics::Renderer::instance->start_frame(ec);
 	if (ec) {
 		// process error and don't render new frame (should probably exit application if fatal error occurs)
@@ -47,7 +52,7 @@ void GameEngine::render() {
 	Engine::Graphics::Renderer::instance->set_viewport(0, 0, DeviceContext::display.width, DeviceContext::display.height);
 	Engine::Graphics::Renderer::instance->set_scissor_rect(0, 0, DeviceContext::display.width, DeviceContext::display.height);
 
-	Engine::Graphics::Renderer::instance->clear(0.0, 1.0, 0.0);
+	Engine::Graphics::Renderer::instance->clear(0.0, 0.0, 0.0);
 
 	if (game_render_state == Game_State::inGame) {
 		WorldManager::Instance().render(Engine::Graphics::Renderer::instance);
@@ -64,6 +69,8 @@ void GameEngine::render() {
 bool GameEngine::init() {
 	srand(time(NULL));
 	bool ok = true;
+
+	ok = SettingsManager::Instance().load_config();
 	if (ok) ok = init_MainWindow();
 	if (ok) ok = init_GraphicsAPI();
 	if (ok) ok = init_input();

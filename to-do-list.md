@@ -15,11 +15,6 @@
 ** new lighting system (with chunks and uint_vec3?)
 
 # -----Vulkan Implementation-----
-* for now only one main queue "graphics_queue" is used for graphics, swapchain and presentation.
-	Second queue "present_queue" can be used for presentation later
-** both OpenGL and Vulkan RHI implementations should work
-** update dirty texture arrays for Vulkan implementation
-
 * check shaders code for bindings
 * maybe check error_code for texture objects later
 

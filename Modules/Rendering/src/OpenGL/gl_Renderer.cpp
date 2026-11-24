@@ -21,6 +21,10 @@ Engine::Graphics::OpenGL_Renderer::OpenGL_Renderer(std::error_code& ec) {
 	glEnable(GL_SCISSOR_TEST);
 }
 
+void Engine::Graphics::OpenGL_Renderer::wait_for_frame_slot(std::error_code& ec) {
+	
+}
+
 void Engine::Graphics::OpenGL_Renderer::start_frame(std::error_code& ec) {
 	// no need to prepare frame for rendering in OpenGL
 }
@@ -79,6 +83,18 @@ void Engine::Graphics::OpenGL_Renderer::bind_pipeline(const Pipeline& p) {
 	current_pipeline = &p; // remember this pipeline as current pipeline
 }
 
+void Engine::Graphics::OpenGL_Renderer::bind_pipeline_push_constant(const Pipeline& p, const void* data) {
+	const auto& gl_pipeline = static_cast<const GL_Pipeline&>(p);
+	// location should be set
+	switch (gl_pipeline.push_constant_type) {
+		case Pipeline::PushConstantType::None: return;
+		case Pipeline::PushConstantType::Float: gl_pipeline.shader->set_uniform_float(data, gl_pipeline.push_constant_location); return;
+		case Pipeline::PushConstantType::Vec2: gl_pipeline.shader->set_uniform_vec2(data, gl_pipeline.push_constant_location); return;
+		case Pipeline::PushConstantType::Vec3: gl_pipeline.shader->set_uniform_vec3(data, gl_pipeline.push_constant_location); return;
+		case Pipeline::PushConstantType::Vec4: gl_pipeline.shader->set_uniform_vec4(data, gl_pipeline.push_constant_location); return;
+		default: return;
+	}
+}
 
 std::unique_ptr<Engine::Graphics::ShaderHandle> Engine::Graphics::OpenGL_Renderer::create_ShaderHandle(
 	const std::filesystem::path& vertex_shader_path,
@@ -124,6 +140,7 @@ std::unique_ptr<Engine::Graphics::Pipeline> Engine::Graphics::OpenGL_Renderer::c
 void Engine::Graphics::OpenGL_Renderer::renderIndexedData(
 	const VertexBuffer& vb,
 	const IndexBuffer& ib,
+	uint32_t vb_offset,
 	uint32_t indexCount,
 	uint32_t baseIndex
 ) {

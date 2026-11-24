@@ -206,7 +206,7 @@ void World::render(Engine::Graphics::Renderer* renderer) {
 	for (int x = render_min_x; x <= render_max_x; x++) {
 		for (int y = render_min_y; y <= render_max_y; y++) {
 			ChunkRenderBuffer& buf = *render_buffers[x * 4 + y];
-			renderer->renderIndexedData(*buf.vb, *ib, buf.index_count);
+			renderer->renderIndexedData(*buf.vb, *ib, 0, buf.index_count);
 		}
 	}
 

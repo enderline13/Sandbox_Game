@@ -6,14 +6,17 @@ layout (location = 2) in vec4 a_TextColor;
 layout(std140, binding = 1) uniform UI_UB {
 	mat4 u_ViewMatrix;
 	mat4 u_ProjectionMatrix;
-	vec2 u_ContentOffset;
 };
+
+layout(push_constant) uniform UIPushConstants {
+    layout (offset = 0) vec2 u_ContentOffset;
+} u_PushConstant;
 
 layout (location = 0) out vec2 v_TexUV;
 layout (location = 1) out vec4 v_TextColor;
 
 void main() {
-	gl_Position = u_ProjectionMatrix * u_ViewMatrix * vec4(a_Pos.x + u_ContentOffset.x, a_Pos.y + u_ContentOffset.y, 0.0, 1.0);
+	gl_Position = u_ProjectionMatrix * u_ViewMatrix * vec4(a_Pos + u_PushConstant.u_ContentOffset, 0.0, 1.0);
 	v_TexUV = a_TexUV;
 	v_TextColor = a_TextColor;
 }

@@ -39,7 +39,7 @@ private:
     static void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
     static void mouse_wheel_callback(GLFWwindow* window, double xOffset, double yOffset);
 public:
-    inline static GraphicsAPI graphics_API = GraphicsAPI::VULKAN;
+    inline static GraphicsAPI graphics_API = GraphicsAPI::OPEN_GL;
     inline static DisplayController display{};
     inline static Keyboard keyBoard{};
     inline static Mouse mouse{};

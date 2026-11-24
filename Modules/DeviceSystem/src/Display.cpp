@@ -2,6 +2,7 @@
 #define GLFW_INCLUDE_NONE //don't use old OpenGL headers
 #include <GLFW/glfw3.h>
 #include <Utility/Logger.h>
+#include <Rendering/RHI/Renderer.h>
 
 bool DisplayController::setup_monitor_video_modes() {
     primary_monitor = glfwGetPrimaryMonitor();
@@ -57,6 +58,8 @@ void DisplayController::change_present_mode() {
     if (present_mode == DisplayPresentMode::Immediate) present_mode = DisplayPresentMode::Double;
     else if (present_mode == DisplayPresentMode::Double) present_mode = DisplayPresentMode::Triple;
     else present_mode = DisplayPresentMode::Immediate;
+
+    Engine::Graphics::Renderer::instance->on_window_resize(width, height, static_cast<uint8_t>(present_mode));
 
     // only used for OpenGL
     glfwSwapInterval(present_mode == DisplayPresentMode::Double ? 1 : 0);

@@ -6,41 +6,41 @@
 #include <Utility/Logger.h>
 #include <glm/ext/matrix_clip_space.hpp>
 #include <Resources/TextureArrayMgr.h>
+#include <format>
 
 bool Engine::UI::UI_System::init() {
 	namespace EG = Engine::Graphics;
 
-	const uint32_t MAX_SPRITES_VERTEX_SIZE = MAX_SPRITES_PER_DRAW * 4;
 	const uint32_t MAX_SPRITES_INDEX_SIZE = MAX_SPRITES_PER_DRAW * 6;
-
-	const uint32_t MAX_SDF_TEXT_VERTEX_SIZE = MAX_SDF_TEXT_PER_DRAW * 4;
-	const uint32_t MAX_SDF_TEXT_INDEX_SIZE = MAX_SDF_TEXT_PER_DRAW * 6;
 
 	// Sprites shader handles & buffers
 	std::error_code ec;
 	std::filesystem::path vertex_shader_path;
 	std::filesystem::path fragment_shader_path;
 
-	std::filesystem::path base_path;
-	std::string spirv;
+	std::string base_path;
+	std::string specific;
+	std::string ext;
 	if (DeviceContext::graphics_API == DeviceContext::GraphicsAPI::OPEN_GL) {
 		base_path = "Resources/shaders/GLSL";
-		spirv = "";
+		specific = "GL_Specific";
+		ext = "";
 	}
 	else if (DeviceContext::graphics_API == DeviceContext::GraphicsAPI::VULKAN) {
 		base_path = "Resources/shaders/SPIRV";
-		spirv = ".spv";
+		specific = "VK_Specific";
+		ext = ".spv";
 	}
 
-	vertex_shader_path = base_path / (std::string("UI/ui_sprites.vert") + spirv);
-	fragment_shader_path = base_path / (std::string("UI/ui_sprites.frag") + spirv);
+	vertex_shader_path = std::format("{}/{}/UI/ui_sprites.vert{}", base_path, specific, ext);
+	fragment_shader_path = std::format("{}/Common/UI/ui_sprites.frag{}", base_path, ext);
 	sprites_shader = EG::Renderer::instance->create_ShaderHandle(vertex_shader_path, fragment_shader_path, ec);
 	if (ec) {
 		Engine::Util::Logger::Log("Failed to create Shader Handle for UI sprites: " + ec.message());
 		return false;
 	}
 
-	fragment_shader_path = base_path / (std::string("UI/ui_tiled_sprites.frag") + spirv);
+	fragment_shader_path = std::format("{}/Common/UI/ui_tiled_sprites.frag{}", base_path, ext);
 	tiled_sprites_shader = EG::Renderer::instance->create_ShaderHandle(vertex_shader_path, fragment_shader_path, ec);
 	if (ec) {
 		Engine::Util::Logger::Log("Failed to create Shader Handle for UI tiled sprites: " + ec.message());
@@ -67,11 +67,11 @@ bool Engine::UI::UI_System::init() {
 	sprites_vl->add_attribute(4, EG::VertexAttributeType::UINT,		  sizeof(UI_Vertex2f), offsetof(UI_Vertex2f, tex_id));
 
 	sprites_vb = EG::Renderer::instance->create_VertexBuffer(ec);
-	sprites_vb->set_data(nullptr, MAX_SPRITES_VERTEX_SIZE * sizeof(UI_Vertex2f), EG::VertexBuffer::USAGE_DYNAMIC);
+	sprites_vb->set_data(nullptr, MAX_SPRITES_VERTEX_SIZE * sizeof(UI_Vertex2f) * 2, EG::VertexBuffer::USAGE_DYNAMIC); // double size for double buffers
 
 	// SDF text shader handle & buffers
-	vertex_shader_path = base_path / (std::string("UI/sdf_text.vert") + spirv);
-	fragment_shader_path = base_path / (std::string("UI/sdf_text.frag") + spirv);
+	vertex_shader_path = std::format("{}/{}/UI/sdf_text.vert{}", base_path, specific, ext);
+	fragment_shader_path = std::format("{}/Common/UI/sdf_text.frag{}", base_path, ext);
 	sdf_text_shader = EG::Renderer::instance->create_ShaderHandle(vertex_shader_path, fragment_shader_path, ec);
 	if (ec) {
 		Engine::Util::Logger::Log("Failed to create Shader Handle for UI SDF text: " + ec.message());
@@ -84,7 +84,7 @@ bool Engine::UI::UI_System::init() {
 	sdf_text_vl->add_attribute(2, EG::VertexAttributeType::FLOAT_VEC4, sizeof(UI_Text_Vertex2f), offsetof(UI_Text_Vertex2f, color));
 
 	sdf_text_vb = EG::Renderer::instance->create_VertexBuffer(ec);
-	sdf_text_vb->set_data(nullptr, MAX_SDF_TEXT_VERTEX_SIZE * sizeof(UI_Text_Vertex2f), EG::VertexBuffer::USAGE_DYNAMIC);
+	sdf_text_vb->set_data(nullptr, MAX_SDF_TEXT_VERTEX_SIZE * sizeof(UI_Text_Vertex2f) * 2, EG::VertexBuffer::USAGE_DYNAMIC); // double size for double buffers
 
 	ubo_data.viewMatrix = glm::mat4(1.0f);
 	ubo_data.projectionMatrix = glm::ortho(-DeviceContext::display.ratio, DeviceContext::display.ratio, -1.0f, 1.0f);
@@ -124,12 +124,15 @@ bool Engine::UI::UI_System::init() {
 	// Bind all samplers [0, 8] and common UB to all pipelines
 	Engine::Resource::TextureArrayManager::Instance().bind_samplers_to_pipeline(*sprites_pipeline);
 	sprites_pipeline->bind_uniform_buffer(*common_ub, 1);
+	sprites_pipeline->add_push_constant("u_ContentOffset", EG::Pipeline::PushConstantType::Vec2);
 
 	Engine::Resource::TextureArrayManager::Instance().bind_samplers_to_pipeline(*tiled_sprites_pipeline);
 	tiled_sprites_pipeline->bind_uniform_buffer(*common_ub, 1);
+	tiled_sprites_pipeline->add_push_constant("u_ContentOffset", EG::Pipeline::PushConstantType::Vec2);
 
 	Engine::Resource::TextureArrayManager::Instance().bind_samplers_to_pipeline(*sdf_text_pipeline);
 	sdf_text_pipeline->bind_uniform_buffer(*common_ub, 1);
+	sdf_text_pipeline->add_push_constant("u_ContentOffset", EG::Pipeline::PushConstantType::Vec2);
 
 	// Reserve memory for buffers (this size should be enough for most scenarios)
 	render_context.sprites_buffer.reserve(MAX_SPRITES_VERTEX_SIZE);
@@ -192,18 +195,25 @@ void Engine::UI::UI_System::update() {
 	// update interactable components
 	UI_BehaviourSystem::Instance().update(render_context);
 
-	sprites_vb->update_data(render_context.sprites_buffer.data(), render_context.sprites_buffer.size() * sizeof(UI_Vertex2f));
-	sdf_text_vb->update_data(render_context.sdf_text_buffer.data(), render_context.sdf_text_buffer.size() * sizeof(UI_Text_Vertex2f));
+	uint32_t current_frame_index = Engine::Graphics::Renderer::instance->get_current_frame_index();
+	sprites_vb->update_data(
+		render_context.sprites_buffer.data(),
+		render_context.sprites_buffer.size() * sizeof(UI_Vertex2f),
+		static_cast<size_t>(current_frame_index * MAX_SPRITES_VERTEX_SIZE) * sizeof(UI_Vertex2f)
+	);
+	sdf_text_vb->update_data(
+		render_context.sdf_text_buffer.data(),
+		render_context.sdf_text_buffer.size() * sizeof(UI_Text_Vertex2f),
+		static_cast<size_t>(current_frame_index * MAX_SDF_TEXT_VERTEX_SIZE) * sizeof(UI_Text_Vertex2f)
+	);
 }
 
 void Engine::UI::UI_System::render(Engine::Graphics::Renderer* renderer) {
 	sprites_INDEX_OFFSET = 0;
 	sdf_text_INDEX_OFFSET = 0;
+	uint32_t current_frame_index = Engine::Graphics::Renderer::instance->get_current_frame_index();
 
 	renderer->set_scissor_rect(0, 0, DeviceContext::display.width, DeviceContext::display.height);
-
-	ubo_data.content_offset = glm::vec2(0.0f);
-	common_ub->update_data(&ubo_data, sizeof(UI_UBO));
 
 	for (auto& render_entry : render_context.render_queue) {
 		// change clip rectangle
@@ -212,28 +222,25 @@ void Engine::UI::UI_System::render(Engine::Graphics::Renderer* renderer) {
 			renderer->set_scissor_rect(rect.x, rect.y, rect.w, rect.h);
 		}
 
-		// change content offset in UBO
-		if (render_entry.change_content_offset) {
-			ubo_data.content_offset = render_context.content_offsets[render_entry.content_offset_id];
-			common_ub->update_data(&ubo_data, sizeof(UI_UBO));
-		}
-
 		// render sprites
 		if (render_entry.render_type == UI_Render_Type::UI_SPRITE) {
 			renderer->bind_pipeline(*sprites_pipeline);
-			renderer->renderIndexedData(*sprites_vb, *common_ib, render_entry.index_count, sprites_INDEX_OFFSET);
+			renderer->bind_pipeline_push_constant(*sprites_pipeline, &render_context.content_offsets[render_entry.content_offset_id][0]);
+			renderer->renderIndexedData(*sprites_vb, *common_ib, current_frame_index * MAX_SPRITES_VERTEX_SIZE * sizeof(UI_Vertex2f), render_entry.index_count, sprites_INDEX_OFFSET);
 			sprites_INDEX_OFFSET += render_entry.index_count;
 		}
 		// render tiled sprites
 		else if (render_entry.render_type == UI_Render_Type::UI_TILED_SPRITE) {
 			renderer->bind_pipeline(*tiled_sprites_pipeline);
-			renderer->renderIndexedData(*sprites_vb, *common_ib, render_entry.index_count, sprites_INDEX_OFFSET);
+			renderer->bind_pipeline_push_constant(*tiled_sprites_pipeline, &render_context.content_offsets[render_entry.content_offset_id][0]);
+			renderer->renderIndexedData(*sprites_vb, *common_ib, current_frame_index * MAX_SDF_TEXT_VERTEX_SIZE * sizeof(UI_Vertex2f), render_entry.index_count, sprites_INDEX_OFFSET);
 			sprites_INDEX_OFFSET += render_entry.index_count;
 		}
 		// render sdf text
 		else if (render_entry.render_type == UI_Render_Type::UI_TEXT) {
 			renderer->bind_pipeline(*sdf_text_pipeline);
-			renderer->renderIndexedData(*sdf_text_vb, *common_ib, render_entry.index_count, sdf_text_INDEX_OFFSET);
+			renderer->bind_pipeline_push_constant(*sdf_text_pipeline, &render_context.content_offsets[render_entry.content_offset_id][0]);
+			renderer->renderIndexedData(*sdf_text_vb, *common_ib, current_frame_index * MAX_SDF_TEXT_VERTEX_SIZE * sizeof(UI_Text_Vertex2f), render_entry.index_count, sdf_text_INDEX_OFFSET);
 			sdf_text_INDEX_OFFSET += render_entry.index_count;
 		}
 	}

@@ -9,8 +9,9 @@ layout (location = 4) in uint a_TexID;
 layout(std140, binding = 1) uniform UI_UB {
 	mat4 u_ViewMatrix;
 	mat4 u_ProjectionMatrix;
-	vec2 u_ContentOffset;
 };
+
+uniform vec2 u_ContentOffset;
 
 layout (location = 0) out vec2 v_TexUV;
 layout (location = 1) out vec4 v_Color;
@@ -18,7 +19,7 @@ layout (location = 2) flat out uint v_TexArrayID;
 layout (location = 3) flat out uint v_TexID;
 
 void main() {
-	gl_Position = u_ProjectionMatrix * u_ViewMatrix * vec4(a_Pos.x + u_ContentOffset.x, a_Pos.y + u_ContentOffset.y, 0.0, 1.0);
+	gl_Position = u_ProjectionMatrix * u_ViewMatrix * vec4(a_Pos + u_ContentOffset, 0.0, 1.0);
 	v_TexUV = a_TexUV;
 	v_Color = a_Color;
 	v_TexArrayID = a_TexArrayID;

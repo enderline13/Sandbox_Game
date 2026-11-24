@@ -25,6 +25,8 @@ namespace Engine::Graphics {
 		void bind_sampler_2D(Texture& tex, uint32_t binding = 0, uint32_t set = 0) const override;
 		void bind_sampler_2D_array(TextureArray& tex_arr, uint32_t binding = 0, uint32_t index = 0, uint32_t set = 0) const override;
 
+		void add_push_constant(const char* name, PushConstantType type) override;
+
 		VkPipeline get_handle() const { return pipeline; }
 		VkPipelineLayout get_layout_handle() const { return pipeline_layout; }
 		const std::vector<VkDescriptorSet>& get_descriptor_sets() const { return descriptor_sets; }

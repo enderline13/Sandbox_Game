@@ -24,6 +24,7 @@ namespace Engine::Graphics {
 		void create_command_pool_and_buffers(std::error_code& ec);
 		void create_semaphores_and_fences(std::error_code& ec);
 	public:
+		void wait_for_frame_slot(std::error_code& ec) override;
 		void start_frame(std::error_code& ec) override;
 		void clear(float r, float g, float b) override;
 		void present_frame(std::error_code& ec) override;
@@ -33,7 +34,9 @@ namespace Engine::Graphics {
 		void use_depth_write(bool use) override;
 		void use_depth_func(DepthFunc func) override;
 		void set_scissor_rect(uint32_t x, uint32_t y, uint32_t width, uint32_t height) override;
+
 		void bind_pipeline(const Pipeline& p) override;
+		void bind_pipeline_push_constant(const Pipeline& p, const void* data) override;
 
 		std::unique_ptr<ShaderHandle> create_ShaderHandle(
 			const std::filesystem::path& vertex_shader_path,
@@ -52,6 +55,7 @@ namespace Engine::Graphics {
 		void renderIndexedData(
 			const VertexBuffer& vb,
 			const IndexBuffer& ib,
+			uint32_t vb_offset,
 			uint32_t indexCount,
 			uint32_t baseIndex = 0
 		) override;
@@ -76,7 +80,6 @@ namespace Engine::Graphics {
 			bool has_mailbox_present_mode;
 		};
 	private:
-		// main handles
 		VkInstance instance = VK_NULL_HANDLE;
 		VkSurfaceKHR surface = VK_NULL_HANDLE;
 		VkSurfaceTransformFlagBitsKHR surface_transform;
@@ -90,27 +93,19 @@ namespace Engine::Graphics {
 
 		VmaAllocator allocator = VK_NULL_HANDLE;
 		
-		// Swap Chain
 		VulkanSwapChain swap_chain;
-		
-		// Render Pass
+
 		VkRenderPass render_pass = VK_NULL_HANDLE;
 
-		// Command pool & buffers
 		VkCommandPool command_pool = VK_NULL_HANDLE;
 		std::vector<VkCommandBuffer> command_buffers;
 
 		// Semaphores(GPU <-> GPU) and Fences(CPU <-> GPU)
 		const uint32_t MAX_FRAMES_IN_FLIGHT = 2;
+
 		std::vector<VkSemaphore> image_available_semaphores;
 		std::vector<VkSemaphore> render_finished_semaphores;
 		std::vector<VkFence> in_flight_fences;
-
-		// current image and frame index
-		uint32_t current_image_index = 0;
-		uint32_t current_frame_index = 0;
-
-		// current present mode
-		PresentMode current_present_mode;
+		std::vector<VkFence> images_in_flight;
 	};
 }

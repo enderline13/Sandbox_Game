@@ -30,11 +30,22 @@ Engine::Graphics::Vulkan_Renderer::~Vulkan_Renderer() {
 		vkDeviceWaitIdle(device);
 	}
 	// destroy semaphores and fences
-	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-		if (image_available_semaphores[i] != VK_NULL_HANDLE) vkDestroySemaphore(device, image_available_semaphores[i], nullptr);
-		if (render_finished_semaphores[i] != VK_NULL_HANDLE) vkDestroySemaphore(device, render_finished_semaphores[i], nullptr);
-		if (in_flight_fences[i] != VK_NULL_HANDLE) vkDestroyFence(device, in_flight_fences[i], nullptr);
+	for (auto ias : image_available_semaphores) {
+		if (ias != VK_NULL_HANDLE) {
+			vkDestroySemaphore(device, ias, nullptr);
+		}
 	}
+	for (auto rfs : render_finished_semaphores) {
+		if (rfs != VK_NULL_HANDLE) {
+			vkDestroySemaphore(device, rfs, nullptr);
+		}
+	}
+	for (auto iff : in_flight_fences) {
+		if (iff != VK_NULL_HANDLE) {
+			vkDestroyFence(device, iff, nullptr);
+		}
+	}
+
 	// destroy command pool (command buffers are destroyed automatically here)
 	if (command_pool != VK_NULL_HANDLE) {
 		vkDestroyCommandPool(device, command_pool, nullptr);
@@ -210,7 +221,7 @@ void Engine::Graphics::Vulkan_Renderer::create_Swap_Chain(std::error_code& ec) {
 	// choose optimal variant (RGBA8 with high color gamma)
 	VkSurfaceFormatKHR surface_format = formats[0];
 	for (const auto& fmt : formats) {
-		if (fmt.format == VK_FORMAT_B8G8R8A8_SRGB && fmt.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
+		if (fmt.format == VK_FORMAT_B8G8R8A8_UNORM && fmt.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
 			surface_format = fmt;
 			break;
 		}
@@ -232,7 +243,7 @@ void Engine::Graphics::Vulkan_Renderer::create_Swap_Chain(std::error_code& ec) {
 		extent = { 1280, 720 }; //default extent is HD, if window size is not received yet
 	}
 
-	// minimum 2 images are used in a swap chain for at least double bufferization
+	// minimum 2 images are used in a swap chain for at least double bufferization, but it will be 3
 	uint32_t image_count = capabilities.minImageCount + 1;
 	if (capabilities.maxImageCount > 0 && image_count > capabilities.maxImageCount) {
 		image_count = capabilities.maxImageCount;
@@ -333,6 +344,13 @@ void Engine::Graphics::Vulkan_Renderer::recreate_Swap_Chain(
 	}
 	swap_chain.image_views.clear();
 
+	for (auto semaphore : render_finished_semaphores) {
+		if (semaphore != VK_NULL_HANDLE) {
+			vkDestroySemaphore(device, semaphore, nullptr);
+		}
+	}
+	render_finished_semaphores.clear();
+
 	VkSwapchainKHR old_chain = swap_chain.chain;
 
 	// new swap chain create info
@@ -392,8 +410,24 @@ void Engine::Graphics::Vulkan_Renderer::recreate_Swap_Chain(
 			return;
 		}
 	}
+
 	// create new framebuffers
 	create_frame_buffers(ec);
+
+	// resize and create new semaphores and fences
+	swap_chain.image_count = actual_image_count;
+	images_in_flight.assign(actual_image_count, VK_NULL_HANDLE);
+	render_finished_semaphores.resize(actual_image_count);
+
+	VkSemaphoreCreateInfo semaphore_info{};
+	semaphore_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+
+	for (size_t i = 0; i < actual_image_count; i++) {
+		if (vkCreateSemaphore(device, &semaphore_info, nullptr, &render_finished_semaphores[i]) != VK_SUCCESS) {
+			ec = Engine::Errors::EngineError::VulkanSyncObjectsInitError;
+			return;
+		}
+	}
 }
 
 void Engine::Graphics::Vulkan_Renderer::create_render_pass(std::error_code& ec) {
@@ -494,9 +528,13 @@ void Engine::Graphics::Vulkan_Renderer::create_command_pool_and_buffers(std::err
 }
 
 void Engine::Graphics::Vulkan_Renderer::create_semaphores_and_fences(std::error_code& ec) {
+	uint32_t swap_chain_images_size = swap_chain.images.size();
+
 	image_available_semaphores.resize(MAX_FRAMES_IN_FLIGHT);
-	render_finished_semaphores.resize(MAX_FRAMES_IN_FLIGHT);
 	in_flight_fences.resize(MAX_FRAMES_IN_FLIGHT);
+
+	render_finished_semaphores.resize(swap_chain_images_size);
+	images_in_flight.assign(swap_chain_images_size, VK_NULL_HANDLE);
 
 	VkSemaphoreCreateInfo semaphore_info{};
 	semaphore_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
@@ -507,9 +545,14 @@ void Engine::Graphics::Vulkan_Renderer::create_semaphores_and_fences(std::error_
 
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
 		if (vkCreateSemaphore(device, &semaphore_info, nullptr, &image_available_semaphores[i]) != VK_SUCCESS ||
-			vkCreateSemaphore(device, &semaphore_info, nullptr, &render_finished_semaphores[i]) != VK_SUCCESS ||
-			vkCreateFence(device, &fence_info, nullptr, &in_flight_fences[i]) != VK_SUCCESS) {
-
+			vkCreateFence(device, &fence_info, nullptr, &in_flight_fences[i]) != VK_SUCCESS
+		) {
+			ec = Engine::Errors::EngineError::VulkanSyncObjectsInitError;
+			return;
+		}
+	}
+	for (size_t i = 0; i < swap_chain_images_size; i++) {
+		if (vkCreateSemaphore(device, &semaphore_info, nullptr, &render_finished_semaphores[i]) != VK_SUCCESS) {
 			ec = Engine::Errors::EngineError::VulkanSyncObjectsInitError;
 			return;
 		}
@@ -517,17 +560,15 @@ void Engine::Graphics::Vulkan_Renderer::create_semaphores_and_fences(std::error_
 }
 
 
-void Engine::Graphics::Vulkan_Renderer::start_frame(std::error_code& ec) {
-	// if window is hidden, then just skip render
-	if (swap_chain.extent.width == 0 || swap_chain.extent.height == 0) {
-		return;
-	}
-
+void Engine::Graphics::Vulkan_Renderer::wait_for_frame_slot(std::error_code& ec) {
 	// wait before GPU finishes processing last frame
-	if (vkWaitForFences(device, 1, &in_flight_fences[current_frame_index], VK_TRUE, UINT64_MAX) != VK_SUCCESS) {
-		ec = Engine::Errors::EngineError::VulkanFenceWaitError;
+	if (in_flight_fences[current_frame_index] == VK_NULL_HANDLE)
 		return;
-	}
+	if (vkWaitForFences(device, 1, &in_flight_fences[current_frame_index], VK_TRUE, UINT64_MAX) != VK_SUCCESS)
+		ec = Engine::Errors::EngineError::VulkanFenceWaitError;
+}
+
+void Engine::Graphics::Vulkan_Renderer::start_frame(std::error_code& ec) {
 	// get index of free image from swap chain
 	VkResult result = vkAcquireNextImageKHR(
 		device,
@@ -541,12 +582,22 @@ void Engine::Graphics::Vulkan_Renderer::start_frame(std::error_code& ec) {
 	//recreate swap chain and just return, so old frame will be rendered
 	if (result == VK_ERROR_OUT_OF_DATE_KHR) {
 		recreate_Swap_Chain(swap_chain.extent.width, swap_chain.extent.height, current_present_mode, ec);
-		return;
 	}
 	else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
 		ec = Engine::Errors::EngineError::VulkanAcquireImageError;
 		return;
 	}
+
+	// if this image in swapchain is already used in another active frame --> wait for it's fence
+	if (images_in_flight[current_image_index] != VK_NULL_HANDLE) {
+		if (vkWaitForFences(device, 1, &images_in_flight[current_image_index], VK_TRUE, UINT64_MAX) != VK_SUCCESS) {
+			ec = Engine::Errors::EngineError::VulkanFenceWaitError;
+			return;
+		}
+	}
+
+	// connect fence of current image slot to current swapchain image fence
+	images_in_flight[current_image_index] = in_flight_fences[current_frame_index];
 
 	// reset fence of current frame
 	if (vkResetFences(device, 1, &in_flight_fences[current_frame_index]) != VK_SUCCESS) {
@@ -603,7 +654,7 @@ void Engine::Graphics::Vulkan_Renderer::present_frame(std::error_code& ec) {
 	submit_info.commandBufferCount = 1;
 	submit_info.pCommandBuffers = &command_buffers[current_frame_index];
 
-	VkSemaphore signal_semaphores[] = { render_finished_semaphores[current_frame_index] };
+	VkSemaphore signal_semaphores[] = { render_finished_semaphores[current_image_index] };
 	submit_info.signalSemaphoreCount = 1;
 	submit_info.pSignalSemaphores = signal_semaphores;
 
@@ -624,12 +675,7 @@ void Engine::Graphics::Vulkan_Renderer::present_frame(std::error_code& ec) {
 	present_info.pImageIndices = &current_image_index;
 
 	VkResult result = vkQueuePresentKHR(present_queue, &present_info);
-
-	//recreate swap chain if something in the display was changed
-	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
-		recreate_Swap_Chain(swap_chain.extent.width, swap_chain.extent.height, current_present_mode, ec);
-	}
-	else if (result != VK_SUCCESS) {
+	if (result != VK_SUCCESS) {
 		ec = Engine::Errors::EngineError::VulkanPresentError;
 		return;
 	}
@@ -639,6 +685,10 @@ void Engine::Graphics::Vulkan_Renderer::present_frame(std::error_code& ec) {
 }
 
 void Engine::Graphics::Vulkan_Renderer::on_window_resize(uint32_t window_width, uint32_t window_height, uint8_t mode_code) {
+	if (window_width == 0 || window_height == 0) {
+		swap_chain.extent = { window_width, window_height };
+		return;
+	}
 	std::error_code ec;
 	recreate_Swap_Chain(window_width, window_height, static_cast<PresentMode>(mode_code), ec);
 }
@@ -694,6 +744,25 @@ void Engine::Graphics::Vulkan_Renderer::bind_pipeline(const Pipeline& p) {
 	current_pipeline = &p; // remember this pipeline as current pipeline
 }
 
+void Engine::Graphics::Vulkan_Renderer::bind_pipeline_push_constant(const Pipeline& p, const void* data) {
+	const auto& vk_pipeline = static_cast<const VK_Pipeline&>(p);
+	uint32_t size{};
+	switch (vk_pipeline.push_constant_type) {
+		case Pipeline::PushConstantType::None: size = 0; break;
+		case Pipeline::PushConstantType::Float: size = 4; break;
+		case Pipeline::PushConstantType::Vec2: size = 8; break;
+		case Pipeline::PushConstantType::Vec3: size = 12; break;
+		case Pipeline::PushConstantType::Vec4: size = 16; break;
+		default: size = 0; break;
+	}
+	vkCmdPushConstants(
+		command_buffers[current_frame_index],
+		vk_pipeline.get_layout_handle(),
+		VK_SHADER_STAGE_VERTEX_BIT, // used only in vertex shader for now
+		0, size, data
+	);
+}
+
 std::unique_ptr<Engine::Graphics::ShaderHandle> Engine::Graphics::Vulkan_Renderer::create_ShaderHandle(
 	const std::filesystem::path& vertex_shader_path,
 	const std::filesystem::path& fragment_shader_path,
@@ -738,6 +807,7 @@ std::unique_ptr<Engine::Graphics::Pipeline> Engine::Graphics::Vulkan_Renderer::c
 void Engine::Graphics::Vulkan_Renderer::renderIndexedData(
 	const VertexBuffer& vb,
 	const IndexBuffer& ib,
+	uint32_t vb_offset,
 	uint32_t indexCount,
 	uint32_t baseIndex
 ) {
@@ -748,7 +818,7 @@ void Engine::Graphics::Vulkan_Renderer::renderIndexedData(
 	
 	// 2. Bind vertex buffer
 	VkBuffer vertex_buffers[] = { vk_vb.get_buffer() };
-	VkDeviceSize offsets[] = { 0 };
+	VkDeviceSize offsets[] = { vb_offset };
 	vkCmdBindVertexBuffers(command_buffers[current_frame_index], 0, 1, vertex_buffers, offsets);
 
 	// 3. Bind index buffer

@@ -13,7 +13,13 @@ namespace Engine::Graphics {
 		void uninit() override;
 
 		void use_shader() const;
+
+		int32_t get_uniform_location(const char* name) const;
+		void set_uniform_float(const void* data, int32_t uniform_location) const;
+		void set_uniform_vec2(const void* data, int32_t uniform_location) const;
+		void set_uniform_vec3(const void* data, int32_t uniform_location) const;
+		void set_uniform_vec4(const void* data, int32_t uniform_location) const;
 	private:
-		uint32_t id = 0;
+		int32_t id = 0;
 	};
 }

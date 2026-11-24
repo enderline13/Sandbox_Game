@@ -10,7 +10,8 @@ namespace Engine::Graphics {
 		~VK_TextureArray();
 
 		void setup_texture_array(
-			uint32_t width, uint32_t height, uint32_t depth, FilterMode filter, WrapMode wrap,
+			uint32_t width, uint32_t height, uint32_t depth,
+			FilterMode filter, WrapMode wrap, DataFormat data_format,
 			uint8_t channels, ResizeStrategy resize_str, std::error_code& ec
 		) override;
 		void add_2D_texture(const char* fileName, std::error_code& ec) override;

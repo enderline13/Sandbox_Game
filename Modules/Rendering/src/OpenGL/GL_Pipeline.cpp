@@ -1,6 +1,4 @@
 #include "Rendering/OpenGL/GL_Pipeline.h"
-#include "Rendering/OpenGL/GL_Shader.h"
-#include "Rendering/OpenGL/GL_VL.h"
 #include "Rendering/OpenGL/GL_UB.h"
 #include "Rendering/OpenGL/GL_SB.h"
 #include "Rendering/OpenGL/GL_Texture.h"
@@ -51,10 +49,12 @@ void Engine::Graphics::GL_Pipeline::bind_sampler_2D_array(TextureArray& tex_arr,
 	gl_tex_arr.bind(index);
 }
 
+void Engine::Graphics::GL_Pipeline::add_push_constant(const char* name, PushConstantType type) {
+	push_constant_location = shader->get_uniform_location(name);
+	push_constant_type = type;
+}
 
 void Engine::Graphics::GL_Pipeline::bind() const {
-	const GL_Shader* gl_shader = static_cast<const GL_Shader*>(shader);
-	const GL_VL* gl_vl = static_cast<const GL_VL*>(vl);
-	gl_shader->use_shader();
-	gl_vl->bind();
+	shader->use_shader();
+	vl->bind();
 }

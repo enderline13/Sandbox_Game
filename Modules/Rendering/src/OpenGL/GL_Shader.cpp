@@ -83,3 +83,24 @@ void Engine::Graphics::GL_Shader::uninit() {
 void Engine::Graphics::GL_Shader::use_shader() const {
 	glUseProgram(id);
 }
+
+int32_t Engine::Graphics::GL_Shader::get_uniform_location(const char* name) const {
+	glUseProgram(id);
+	return glGetUniformLocation(id, name);
+}
+
+void Engine::Graphics::GL_Shader::set_uniform_float(const void* data, int32_t uniform_location) const {
+	glUniform1f(uniform_location, *static_cast<const float*>(data));
+}
+
+void Engine::Graphics::GL_Shader::set_uniform_vec2(const void* data, int32_t uniform_location) const {
+	glUniform2fv(uniform_location, 1, static_cast<const GLfloat*>(data));
+}
+
+void Engine::Graphics::GL_Shader::set_uniform_vec3(const void* data, int32_t uniform_location) const {
+	glUniform3fv(uniform_location, 1, static_cast<const GLfloat*>(data));
+}
+
+void Engine::Graphics::GL_Shader::set_uniform_vec4(const void* data, int32_t uniform_location) const {
+	glUniform4fv(uniform_location, 1, static_cast<const GLfloat*>(data));
+}

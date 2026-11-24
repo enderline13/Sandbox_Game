@@ -19,6 +19,10 @@ namespace Engine::Graphics {
 		enum class PipelineDepthMode : uint8_t { None, ReadAndWrite, Readonly };
 		enum class PipelineCullMode : uint8_t { None, Back, Front };
 
+		enum class PushConstantType : uint8_t {
+			None, Float, Vec2, Vec3, Vec4, Mat4
+		};
+
 		virtual ~Pipeline() = default;
 		virtual void init(
 			const ShaderHandle& shader,
@@ -37,5 +41,10 @@ namespace Engine::Graphics {
 		virtual void bind_storage_buffer(StorageBuffer& sb, uint32_t binding = 0, uint32_t set = 0) const = 0;
 		virtual void bind_sampler_2D(Texture& tex, uint32_t binding = 0, uint32_t set = 0) const = 0;
 		virtual void bind_sampler_2D_array(TextureArray& tex_arr, uint32_t binding = 0, uint32_t index = 0, uint32_t set = 0) const = 0;
+
+		// for now only one push constant is available (because only one is actually used in UI)
+		virtual void add_push_constant(const char* name, PushConstantType type) = 0;
+
+		PushConstantType push_constant_type = PushConstantType::None;
 	};
 }

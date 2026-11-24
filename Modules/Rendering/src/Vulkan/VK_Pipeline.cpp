@@ -125,8 +125,8 @@ void Engine::Graphics::VK_Pipeline::init(
             color_blend_attachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
             color_blend_attachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
             color_blend_attachment.colorBlendOp = VK_BLEND_OP_ADD;
-            color_blend_attachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
-            color_blend_attachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+            color_blend_attachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+            color_blend_attachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
             color_blend_attachment.alphaBlendOp = VK_BLEND_OP_ADD;
         }
         else if (bm == PipelineBlendMode::Additive) {
@@ -270,4 +270,9 @@ void Engine::Graphics::VK_Pipeline::bind_sampler_2D_array(TextureArray& tex_arr,
     descriptor_write.pImageInfo = &image_info;
 
     vkUpdateDescriptorSets(device, 1, &descriptor_write, 0, nullptr);
+}
+
+void Engine::Graphics::VK_Pipeline::add_push_constant(const char* name, PushConstantType type) {
+    push_constant_type = type;
+    // no need to set anything for Vulkan, needed for OpenGL uniform
 }

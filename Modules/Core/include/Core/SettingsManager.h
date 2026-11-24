@@ -4,6 +4,7 @@
 #include <UI/ScrollBar.h>
 #include <Audio/AudioGroupMixer.h>
 #include <nlohmann/json.hpp>
+#include <string>
 
 class SettingsManager {
 	struct Config {
@@ -21,8 +22,9 @@ class SettingsManager {
 		};
 		Screen screen;
 		Volume volume;
+		std::string renderer;
 
-		NLOHMANN_DEFINE_TYPE_INTRUSIVE(Config, screen, volume)
+		NLOHMANN_DEFINE_TYPE_INTRUSIVE(Config, screen, volume, renderer)
 	};
 	friend class MainMenuManager;
 public:
@@ -30,6 +32,7 @@ public:
 		static SettingsManager menu;
 		return menu;
 	}
+	bool load_config();
 	void load_settings();
 	void change_resolution();
 	void toggle_fullscreen();

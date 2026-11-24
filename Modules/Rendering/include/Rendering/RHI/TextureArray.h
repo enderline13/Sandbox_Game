@@ -14,10 +14,14 @@ namespace Engine::Graphics {
 		enum class ResizeStrategy : uint8_t {
 			Resize_by_100_percent, Resize_by_50_percent, Resize_by_1, Resize_by_2, Resize_by_5
 		};
+		enum class DataFormat : uint8_t {
+			UNORM, SRGB
+		};
 		virtual ~TextureArray() = default;
 		uint32_t get_current_size() const { return current_size; }
 		virtual void setup_texture_array(
-			uint32_t width, uint32_t height, uint32_t depth, FilterMode filter, WrapMode wrap,
+			uint32_t width, uint32_t height, uint32_t depth,
+			FilterMode filter, WrapMode wrap, DataFormat data_format,
 			uint8_t channels, ResizeStrategy resize_str, std::error_code& ec
 		) = 0;
 		virtual void add_2D_texture(const char* fileName, std::error_code& ec) = 0;
@@ -28,6 +32,7 @@ namespace Engine::Graphics {
 		ResizeStrategy resize_strategy = ResizeStrategy::Resize_by_100_percent;
 		FilterMode filter = FilterMode::Linear;
 		WrapMode wrap = WrapMode::ClampToEdge;
+		DataFormat data_format = DataFormat::UNORM;
 		uint8_t channels = 4;
 	};
 }

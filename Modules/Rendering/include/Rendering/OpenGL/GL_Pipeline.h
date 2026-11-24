@@ -1,5 +1,7 @@
 #pragma once
 #include "Rendering/RHI/Pipeline.h"
+#include "Rendering/OpenGL/GL_Shader.h"
+#include "Rendering/OpenGL/GL_VL.h"
 
 namespace Engine::Graphics {
 	class GL_Pipeline : public Pipeline {
@@ -23,10 +25,13 @@ namespace Engine::Graphics {
 		void bind_sampler_2D(Texture& tex, uint32_t binding = 0, uint32_t set = 0) const override;
 		void bind_sampler_2D_array(TextureArray& tex_arr, uint32_t binding = 0, uint32_t index = 0, uint32_t set = 0) const override;
 
+		void add_push_constant(const char* name, PushConstantType type) override;
+
 		void bind() const;
 
 		// pipeline for OpenGL uses only shader and vertex layuot
-		const ShaderHandle* shader;
-		const VertexLayout* vl;
+		const GL_Shader* shader;
+		const GL_VL* vl;
+		int32_t push_constant_location = 0;
 	};
 }

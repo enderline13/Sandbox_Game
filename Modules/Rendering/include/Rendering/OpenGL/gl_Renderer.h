@@ -7,6 +7,7 @@ namespace Engine::Graphics {
 		OpenGL_Renderer(std::error_code& ec);
 		~OpenGL_Renderer() = default;
 
+		void wait_for_frame_slot(std::error_code& ec) override;
 		void start_frame(std::error_code& ec) override;
 		void clear(float r, float g, float b) override;
 		void present_frame(std::error_code& ec) override;
@@ -16,7 +17,9 @@ namespace Engine::Graphics {
 		void use_depth_write(bool use) override;
 		void use_depth_func(DepthFunc func) override;
 		void set_scissor_rect(uint32_t x, uint32_t y, uint32_t width, uint32_t height) override;
+
 		void bind_pipeline(const Pipeline& p) override;
+		void bind_pipeline_push_constant(const Pipeline& p, const void* data) override;
 
 		std::unique_ptr<ShaderHandle> create_ShaderHandle(
 			const std::filesystem::path& vertex_shader_path,
@@ -35,6 +38,7 @@ namespace Engine::Graphics {
 		void renderIndexedData(
 			const VertexBuffer& vb,
 			const IndexBuffer& ib,
+			uint32_t vb_offset,
 			uint32_t indexCount,
 			uint32_t baseIndex = 0
 		) override;

@@ -24,13 +24,15 @@ Engine::Graphics::VK_TextureArray::~VK_TextureArray() {
 }
 
 void Engine::Graphics::VK_TextureArray::setup_texture_array(
-	uint32_t width, uint32_t height, uint32_t depth, FilterMode filter, WrapMode wrap,
+	uint32_t width, uint32_t height, uint32_t depth,
+    FilterMode filter, WrapMode wrap, DataFormat data_format,
 	uint8_t channels, ResizeStrategy resize_str, std::error_code& ec
 ) {
     this->width = width;
     this->height = height;
     this->filter = filter;
     this->wrap = wrap;
+    this->data_format = data_format;
     this->resize_strategy = resize_str;
     this->channels = channels;
     uint32_t new_depth = (depth == 0) ? 1 : depth;
@@ -203,10 +205,10 @@ VkDescriptorImageInfo Engine::Graphics::VK_TextureArray::get_descriptor_info() c
 void Engine::Graphics::VK_TextureArray::create_tex_array(
     VkImage& new_image, VmaAllocation& new_allocation, VkImageView& new_image_view, uint32_t new_depth, std::error_code& ec
 ) {
-    VkFormat image_format = VK_FORMAT_R8G8B8A8_SRGB;
-    if (channels == 1)      image_format = VK_FORMAT_R8_SRGB;
-    else if (channels == 2) image_format = VK_FORMAT_R8G8_SRGB;
-    else                    image_format = VK_FORMAT_R8G8B8A8_SRGB; // if RGB then use RGBA
+    VkFormat image_format{};
+    if (channels == 1)      image_format = (data_format == DataFormat::UNORM) ? VK_FORMAT_R8_UNORM : VK_FORMAT_R8_SRGB;
+    else if (channels == 2) image_format = (data_format == DataFormat::UNORM) ? VK_FORMAT_R8G8_UNORM : VK_FORMAT_R8G8_SRGB;
+    else                    image_format = (data_format == DataFormat::UNORM) ? VK_FORMAT_R8G8B8A8_UNORM : VK_FORMAT_R8G8B8A8_SRGB;
 
     // 1. create image info
     VkImageCreateInfo img_info{};

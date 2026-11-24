@@ -46,7 +46,6 @@ namespace Engine::UI {
 	struct UI_UBO {
 		glm::mat4 viewMatrix;
 		glm::mat4 projectionMatrix;
-		glm::vec2 content_offset;
 	};
 
 	enum UI_Component_Type : uint8_t {

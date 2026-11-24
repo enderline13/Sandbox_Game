@@ -11,7 +11,8 @@ Engine::Graphics::GL_TextureArray::~GL_TextureArray() {
 }
 
 void Engine::Graphics::GL_TextureArray::setup_texture_array(
-    uint32_t width, uint32_t height, uint32_t depth, FilterMode filter, WrapMode wrap,
+    uint32_t width, uint32_t height, uint32_t depth,
+    FilterMode filter, WrapMode wrap, DataFormat data_format,
     uint8_t channels, ResizeStrategy resize_str, std::error_code& ec
 ) {
     this->width = width;
@@ -19,6 +20,7 @@ void Engine::Graphics::GL_TextureArray::setup_texture_array(
     this->depth = (depth == 0) ? 1 : depth;
     this->filter = filter;
     this->wrap = wrap;
+    this->data_format = data_format;
     this->resize_strategy = resize_str;
     this->channels = (channels == 3) ? 4 : channels;
     create_tex_array(id);
