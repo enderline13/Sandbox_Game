@@ -107,21 +107,24 @@ void WorldManager::_world_loader(const std::filesystem::path& save_file_path) {
 	{
 		file_path = save_file_path / "meta.save";
 		std::ifstream in(file_path, std::ios::binary);
-		//write world size
+		if (!in.is_open()) return;
 		in.read(reinterpret_cast<char*>(&world->width), sizeof(uint16_t));
 		in.read(reinterpret_cast<char*>(&world->height), sizeof(uint16_t));
+		if (!in || world->width == 0 || world->height == 0) return;
 		world->init_tiles_buffer();
 	}
 	// tiles file
 	{
 		file_path = save_file_path / "tiles.save";
 		std::ifstream in(file_path, std::ios::binary);
+		if (!in.is_open()) return;
 
 		// 1. make up-to-date ID table
 		std::vector<uint16_t> table;
 
 		uint32_t table_size;
 		in.read(reinterpret_cast<char*>(&table_size), sizeof(uint32_t));
+		if (!in) return;
 		table.resize(table_size);
 
 		for (uint32_t i = 0; i < table_size; ++i) {
@@ -131,6 +134,7 @@ void WorldManager::_world_loader(const std::filesystem::path& save_file_path) {
 			std::string UID;
 			UID.resize(UID_size);
 			in.read(UID.data(), UID_size);
+			if (!in) return;
 			auto correct_ID = Engine::Object::ObjectManager::Instance().get_object_id(UID);
 			if (correct_ID.has_value()) {
 				table[i] = correct_ID.value();
@@ -145,6 +149,8 @@ void WorldManager::_world_loader(const std::filesystem::path& save_file_path) {
 			for (uint16_t y = 0; y < world->height; ++y) {
 				WorldSlot slot;
 				in.read(reinterpret_cast<char*>(&slot), sizeof(WorldSlot));
+				if (!in) return;
+				if (slot.tile_id >= table.size() || slot.wall_id >= table.size()) return;
 				slot.tile_id = table[slot.tile_id];
 				slot.wall_id = table[slot.wall_id];
 				world->world_slots[y * world->width + x] = slot;

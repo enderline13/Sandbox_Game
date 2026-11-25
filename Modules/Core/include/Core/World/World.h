@@ -65,7 +65,7 @@ private:
 	uint16_t width = 0, height = 0;
 	WorldSlot* world_slots = nullptr;
 	std::unordered_map<uint32_t, std::unique_ptr<Engine::Object::ObjectComponent>> object_components;
-	ChunkRenderBuffer* render_buffers[RENDERABLE_CHUNKS_SIZE];
+	ChunkRenderBuffer* render_buffers[RENDERABLE_CHUNKS_SIZE] = {};
 
 	uint32_t last_chunk_x = 0;
 	uint32_t last_chunk_y = 0;

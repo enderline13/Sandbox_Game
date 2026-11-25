@@ -15,7 +15,9 @@ World::~World() {
 		delete[] world_slots;
 	}
 	for (int i = 0; i < RENDERABLE_CHUNKS_SIZE; i++) {
-		delete render_buffers[i];
+		if (render_buffers[i]) {
+			delete render_buffers[i];
+		}
 	}
 }
 
@@ -427,6 +429,11 @@ void World::process_LB_click() {
 }
 
 void World::process_RB_click() {
+	if (!world_slots ||
+		DeviceContext::mouse.world_x_pos < 0 ||
+		DeviceContext::mouse.world_y_pos < 0 ||
+		DeviceContext::mouse.world_x_pos >= width ||
+		DeviceContext::mouse.world_y_pos >= height) return;
 	uint32_t slot_index = DeviceContext::mouse.world_y_pos * width + DeviceContext::mouse.world_x_pos;
 	WorldSlot* slot = &world_slots[slot_index];
 
@@ -459,24 +466,30 @@ void World::process_scrollwheel() {
 }
 
 bool World::place_tile(uint32_t world_x, uint32_t world_y, uint16_t tile_id) {
+	if (!world_slots || world_x >= width || world_y >= height) return false;
 	WorldSlot& slot = world_slots[world_y * width + world_x];
 	if (slot.tile_id != 0) return false; //slot already has tile
 	Engine::Object::ObjectInfo* object_info = Engine::Object::ObjectManager::Instance().get_object_info(tile_id);
 	if (object_info->objectType == Engine::Object::ObjectType::isMultiBlock) {
 		int obj_width = static_cast<Engine::Object::MultiBlockInfo*>(object_info)->tiles_width;
 		int obj_height = static_cast<Engine::Object::MultiBlockInfo*>(object_info)->tiles_height;
-		int max_x = world_x + obj_width;
-		int max_y = world_y + obj_height;
-		for (int x = world_x; x < max_x; x++) {
-			for (int y = world_y; y < max_y; y++) {
+		if (obj_width <= 0 || obj_height <= 0 ||
+			world_x + static_cast<uint32_t>(obj_width) > width ||
+			world_y + static_cast<uint32_t>(obj_height) > height) {
+			return false;
+		}
+		uint32_t max_x = world_x + static_cast<uint32_t>(obj_width);
+		uint32_t max_y = world_y + static_cast<uint32_t>(obj_height);
+		for (uint32_t x = world_x; x < max_x; x++) {
+			for (uint32_t y = world_y; y < max_y; y++) {
 				if (world_slots[y * width + x].tile_id != 0) {
 					return false; //not enough space to place complex object
 				}
 			}
 		}
 		int main_part_index = world_y * width + world_x;
-		for (int x = world_x; x < max_x; x++) {
-			for (int y = world_y; y < max_y; y++) {
+		for (uint32_t x = world_x; x < max_x; x++) {
+			for (uint32_t y = world_y; y < max_y; y++) {
 				int comp_obj_part_index = y * width + x;
 				if (comp_obj_part_index == main_part_index) continue;
 				world_slots[y * width + x].tile_id = 1; //place complex object parts with coords of main part
@@ -531,6 +544,7 @@ bool World::place_tile(uint32_t world_x, uint32_t world_y, uint16_t tile_id) {
 }
 
 bool World::destroy_tile(uint32_t world_x, uint32_t world_y) {
+	if (!world_slots || world_x >= width || world_y >= height) return false;
 	uint32_t slot_index = world_y * width + world_x;
 	WorldSlot* slot = &world_slots[slot_index];
 	if (slot->tile_id == 0) return false; //slot already has no tile

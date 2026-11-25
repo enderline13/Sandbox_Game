@@ -12,6 +12,9 @@ namespace Engine::Util {
 			if (id >= id_set.size()) {
 				id_set.resize(id + 1, 0);
 			}
+			if (id_set[id] != 0) {
+				return &(dense_components[id_set[id] - 1] = std::move(comp));
+			}
 			id_set[id] = dense_ids.size() + 1;
 			dense_ids.emplace_back(id);
 			dense_components.emplace_back(std::move(comp));
