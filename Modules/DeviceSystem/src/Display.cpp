@@ -6,12 +6,17 @@
 
 bool DisplayController::setup_monitor_video_modes() {
     primary_monitor = glfwGetPrimaryMonitor();
+    if (!primary_monitor) {
+        Engine::Util::Logger::Log("Can't find primary monitor");
+        return false;
+    }
     modes = glfwGetVideoModes(primary_monitor, &modes_count);
-    if (!modes) {
+    if (!modes || modes_count <= 0) {
         Engine::Util::Logger::Log("Can't load monitor video modes");
         return false;
     }
 
+    video_modes.clear();
     video_modes.emplace_back();
     for (int i = 0; i < modes_count; i++) {
         const GLFWvidmode& mode = modes[i];
@@ -28,6 +33,11 @@ bool DisplayController::setup_monitor_video_modes() {
         }
     }
     video_modes.erase(video_modes.begin());
+    if (video_modes.empty()) {
+        Engine::Util::Logger::Log("No supported monitor video modes");
+        return false;
+    }
+    current_video_mode = 0;
 
     return true;
 }
@@ -35,8 +45,8 @@ bool DisplayController::setup_monitor_video_modes() {
 void DisplayController::update_resolution_callback(int width, int height) {
     this->height = height;
     this->width = width;
-    ratio = (float)width / (float)height;
-    double_x_ratio = 1 / (2 * ratio);
+    ratio = height > 0 ? static_cast<float>(width) / static_cast<float>(height) : 0.0f;
+    double_x_ratio = ratio > 0.0f ? 1.0f / (2.0f * ratio) : 0.0f;
 }
 
 void DisplayController::toggle_fullscreen(bool state) {
@@ -66,6 +76,7 @@ void DisplayController::change_present_mode() {
 }
 
 void DisplayController::change_resolution(bool next) {
+    if (video_modes.empty()) return;
     if (next) {
         current_video_mode++;
         if (current_video_mode == video_modes.size()) {

@@ -317,6 +317,7 @@ void Engine::Audio::AudioSystem::stop_pcm_sound(uint8_t instance, uint8_t gen) {
 
 void Engine::Audio::AudioSystem::free_pcm_sound(uint8_t instance) {
     PoolSound& sound = sounds_pool[instance];
+    if (!sound.is_used) return;
     --audio_pcm_database[sound.sound_id]->current_instance_count;
     sound.is_used = false;
     ma_sound_uninit(&sound.sound);
