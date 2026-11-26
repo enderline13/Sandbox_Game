@@ -434,6 +434,7 @@ void World::process_RB_click() {
 		DeviceContext::mouse.world_y_pos < 0 ||
 		DeviceContext::mouse.world_x_pos >= width ||
 		DeviceContext::mouse.world_y_pos >= height) return;
+	
 	uint32_t slot_index = DeviceContext::mouse.world_y_pos * width + DeviceContext::mouse.world_x_pos;
 	WorldSlot* slot = &world_slots[slot_index];
 
@@ -466,15 +467,19 @@ void World::process_scrollwheel() {
 }
 
 bool World::place_tile(uint32_t world_x, uint32_t world_y, uint16_t tile_id) {
-	if (!world_slots || world_x >= width || world_y >= height) return false;
+	if (!world_slots ||
+		DeviceContext::mouse.world_x_pos < 0 ||
+		DeviceContext::mouse.world_y_pos < 0 ||
+		DeviceContext::mouse.world_x_pos >= width ||
+		DeviceContext::mouse.world_y_pos >= height) return;
+	
 	WorldSlot& slot = world_slots[world_y * width + world_x];
 	if (slot.tile_id != 0) return false; //slot already has tile
 	Engine::Object::ObjectInfo* object_info = Engine::Object::ObjectManager::Instance().get_object_info(tile_id);
 	if (object_info->objectType == Engine::Object::ObjectType::isMultiBlock) {
 		int obj_width = static_cast<Engine::Object::MultiBlockInfo*>(object_info)->tiles_width;
 		int obj_height = static_cast<Engine::Object::MultiBlockInfo*>(object_info)->tiles_height;
-		if (obj_width <= 0 || obj_height <= 0 ||
-			world_x + static_cast<uint32_t>(obj_width) > width ||
+		if (world_x + static_cast<uint32_t>(obj_width) > width ||
 			world_y + static_cast<uint32_t>(obj_height) > height) {
 			return false;
 		}
@@ -544,7 +549,12 @@ bool World::place_tile(uint32_t world_x, uint32_t world_y, uint16_t tile_id) {
 }
 
 bool World::destroy_tile(uint32_t world_x, uint32_t world_y) {
-	if (!world_slots || world_x >= width || world_y >= height) return false;
+	if (!world_slots ||
+		DeviceContext::mouse.world_x_pos < 0 ||
+		DeviceContext::mouse.world_y_pos < 0 ||
+		DeviceContext::mouse.world_x_pos >= width ||
+		DeviceContext::mouse.world_y_pos >= height) return;
+	
 	uint32_t slot_index = world_y * width + world_x;
 	WorldSlot* slot = &world_slots[slot_index];
 	if (slot->tile_id == 0) return false; //slot already has no tile
